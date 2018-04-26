@@ -1,8 +1,8 @@
 > #### ECMAScript中的变量值类型
 
-+ #####基本类型   Number, String, Boolean, Undefined, Null
++ ##### 基本类型   Number, String, Boolean, Undefined, Null
 
-+ #####引用类型   Object, Array, Function, Date, RegExp
++ ##### 引用类型   Object, Array, Function, Date, RegExp
 
 在将一个值赋给变量时解析器必须确定这个值是基本类型值还是引用类型值。
 
