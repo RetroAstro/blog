@@ -1,0 +1,433 @@
+> ### CSS动画之旋转魔方轮播
+
+##### 很久没有回头来复习CSS方面的知识了, 正好又到了月底写文章的deadline......
+
+##### 所以这次选择了详细巩固一下CSS3动画有关的知识点, 因为之前只是用过一些属性并没有深究细节。
+
+##### 在我自己写完这篇文章的时候, 才觉得CSS确实能够实现很多炫酷的效果。
+
+##### 本篇文章demo的完成自己也是查了很多相关知识点和借鉴了一些文章中的内容。但不管怎样, 作为一个前端菜鸟, 总是在不断学习中成长的。这句话写在这里自己心里也安心一些。(逃......
+
+#### [最终的demo效果地址](http://120.78.158.202/)
+
+##### 下面我将一步一步详解如何利用纯CSS实现一个旋转魔方轮播的效果。
+
+##### 总的来说我们需要实现以下两个主要功能：
+
+* ##### 构建一个能够旋转的立方体
+
+* ##### 让立方体拥有基本轮播所具有的特性
+
+##### 但在完成以上两点之前我们需要再次了解或熟悉一下实现其功能的CSS3基础知识点：
+
+1. ##### transition
+
+2. ##### transform
+
+3. ##### perspective 
+
+4. ##### preserve-3d
+
+5. ##### animation
+
+##### transition属性 --- 过渡效果
+
+````css
+transition: property duration timing-fucntion delay;
+````
+
+##### 这个属性应该都很熟悉, 也不过多讲, 只是列出其所具有的所有子属性。
+
+##### 过渡属性 --- 过渡持续时间 --- 过渡函数(曲线) --- 过渡延迟
+
+````css
+transition-timing-function: linear|ease|ease-in|ease-out|ease-in-out; 原生具有的基本过渡函数
+````
+
+##### transform属性 --- 对元素进行2D或3D转换
+
+##### 它有几个常用的变换方法：`scale`   `scale3d`   `translate`   `translate3d`   `rotate`   `rotate3d`  等。
+
+````css
+transform-origin: x-axis y-axis z-axis;  设置旋转元素的基点位置
+
+transform-style: preserve-3d; 让转换的子元素保留3D转换(与perspective搭配使用)
+````
+
+##### perspective属性 --- 让元素实现3D透视效果
+
+````css
+perspective: 1000px;
+    它有两种写法    
+transform: perspective(1000px);  
+````
+
+##### 这个属性让物体具有立体的3D透视效果, 值越大物体离此时我们的眼睛看到屏幕里物体的距离就越远, 相反若它的值越小, 离我们的视角就越近, 即在屏幕中显示的大小就越大。它和preserve-3d共同使用在需要实现3D效果的父元素上搭建舞台视角, 让其子元素能够实现真正的3D转换。 
+
+##### [关于transform的详细讲解(张鑫旭)](http://www.zhangxinxu.com/wordpress/2012/09/css3-3d-transform-perspective-animate-transition/)
+
+##### 一个基本的立方体就需要结合以上三点属性来实现。 
+
+### Cube
+
+````html
+                                                                                            HTML 
+<div class="cube-wrap">
+    <div class="cube">
+        <div class="cube-face front"><img src="1.jpg"></div>
+        <div class="cube-face back"><img src="2.jpg"></div>
+        <div class="cube-face left"><img src="3.jpg"></div>
+        <div class="cube-face right"><img src="4.jpg"></div>
+        <div class="cube-face top"><img src="5.jpg"></div>
+        <div class="cube-face bottom"><img src="6.jpg"></div>
+    </div>
+</div>
+
+````
+
+##### 重要的CSS样式
+
+````css
+                                                                                            CSS
+.cube-wrap{
+    width: 300px;
+    height: 300px;
+    perspective: 1000px;
+    position: relative;
+}
+.cube-wrap .cube{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    transform-style: preserve-3d;
+    transition: all .5s ease;
+}
+.cube-wrap .cube .cube-face{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    overflow: hidden;
+    opacity: 0.9;
+    border: 1px solid #ccc;
+}
+.cube-wrap .cube .cube-face img{
+    width: 100%;
+    height: 100%;
+}
+.cube-face.front{
+    transform: translateZ(150px);
+}
+.cube-face.back{
+    transform: rotateX(180deg) translateZ(150px);
+}
+.cube-face.left{
+    transform: rotateY(-90deg) translateZ(150px);
+}
+.cube-face.right{
+    transform: rotateY(90deg) translateZ(150px);
+}
+.cube-face.top{
+    transform: rotateX(90deg) translateZ(150px);
+}
+.cube-face.bottom{
+    transform: rotateX(-90deg) translateZ(150px);
+}
+````
+
+##### 在这里我们给父元素使用了perspective和preserve-3d, 接下来子元素的3D变换效果才会生效。
+
+##### 那么重点来了, 上面的代码是如何拼接为一个完整的立方体的呢？在浏览器开发者工具里面仔细观察一下不难发现, 类名为`cube`元素所在位置是在立方体正中间的那一面。因此我们在如何利用代码构造立方体的每一面时就有了思路。 
+
+##### 首先要清楚, transform相关变换时建立的空间直角坐标系x, y , z轴的方向。
+
+##### 即以电脑屏幕为平面, 水平方向为x轴, 竖直方向为y轴, 垂直于屏幕方向的为z轴。 
+
+##### 所以如何构建立方体的六个面就变得很简单了, `cube` 面的初始位置在正中间, 整个立方体的长度为 `300px`,     因此 `translateZ(150px)` 即为正面。要想构造背面, 则先需要逆时针反转初始面 `180deg` , 这时候的正面指向背面, 所以只需再 `translateZ(150px)` 即可。要构造左面则需绕y轴旋转`rotateY(-90deg)` , 相应的右侧则为`rotateY(90deg)` ,然后再进行`translateZ(150px)` 的平移,剩下的两个面同理按照相应的逻辑进行即可。 需要注意的是当一个面绕轴转动时, 逆时针转动为正值, 顺时针为负值。
+
+> #### animation属性
+
+##### 这个属性在CSS3动画中肯定是最重要的了, 它的每一个子属性都值得我们去仔细研究。
+
+````css
+animation: name duration timing-function delay iteration-count direction fill-mode play-state;
+
+animation-delay: 1s;  设置为负值时让动画马上开始, 并且跳过1秒前的动画
+
+animation-direction: normal|reverse|alternate|alternate-reverse; 定义是否循环交替反向播放动画
+
+alternate 动画在奇数次（1、3、5...）正向播放, 在偶数次（2、4、6...）反向播放
+alternate-reverse 动画在奇数次（1、3、5...）反向播放, 在偶数次（2、4、6...）正向播放
+
+animation-fill-mode: none|forwards|backwards|both; 规定当动画不播放时, 要应用到元素的样式
+
+forwards 动画结束后停留在最后一帧
+backwards 在animation-delay期间启动动画的第一帧属性
+both 同时实现forwards与backwards的效果
+
+animation-play-state: paused|running; 控制动画暂停或运行。
+
+@keyframes 设置动画关键帧, 在这里我们用from...to或者百分比来实现自定义的动画
+````
+
+##### [animation详解](https://www.w3cplus.com/content/css3-animation)
+
+##### 下面我们给已经构建好的立方体添加上animation动画：
+
+```css
+                                                                                            CSS
+.cube-wrap .cube{
+    ......
+    animation: spin 10s linear infinite;
+}
+@keyframes spin {
+   from {
+       transform: rotateX(45deg) rotateY(45deg);
+   }
+   to {
+       transform: rotateX(405deg) rotateY(765deg);
+   }
+}
+
+```
+
+### Carousel
+
+##### 现在我们已经实现了能够自由旋转的立方体效果了, 接下来就需要完成轮播所具有的基本功能。
+
+1. ##### 左右按钮切换
+
+2. ##### 底部按钮切换
+
+##### 在实现这两个功能之前我们需要了解一下两个强大的HTML标签, 它们的配合使用实现了轮播图中点击切换的效果。它们就是label和input标签, 先来看看它们的基本用法。
+
+````css
+<input type="radio" id="1">
+
+<label for="1" ></label> 点击label标签, id为1的input标签被选中
+````
+
+##### 这里label标签中的for与input标签中的id相关联, 而input标签中type为radio时是选择框的效果, 它具有一个checked的属性 (若要实现单选框的效果, 则需要设置`name="xxx"` ,此时的名称要一致, 下文就用到了这个效果)
+
+##### 现在就来开始实现具体的效果吧。
+
+````html
+                                                                                            HTML
+<div class="container">
+    <div class="cube-wrap">
+        <input type="radio" name="cuber" class="controller" id="1" checked="true">
+        <input type="radio" name="cuber" class="controller" id="2">
+        <input type="radio" name="cuber" class="controller" id="3">
+        <input type="radio" name="cuber" class="controller" id="4">
+        <input type="radio" name="cuber" class="controller" id="5">
+        <input type="radio" name="cuber" class="controller" id="6">
+        <div class="cube">
+          ......
+        </div>
+        <div class="cube_left">
+            <label for="6" class="cube_action"></label>
+            <label for="1" class="cube_action"></label>
+            <label for="2" class="cube_action"></label>
+            <label for="3" class="cube_action"></label>
+            <label for="4" class="cube_action"></label>
+            <label for="5" class="cube_action"></label>
+        </div>
+        <div class="cube_right">
+            <label for="2" class="cube_action"></label>
+            <label for="3" class="cube_action"></label>
+            <label for="4" class="cube_action"></label>
+            <label for="5" class="cube_action"></label>
+            <label for="6" class="cube_action"></label>
+            <label for="1" class="cube_action"></label>
+        </div>
+        <div class="indicators">
+            <label for="1" class="indicator"></label>
+            <label for="2" class="indicator"></label>
+            <label for="3" class="indicator"></label>
+            <label for="4" class="indicator"></label>
+            <label for="5" class="indicator"></label>
+            <label for="6" class="indicator"></label>
+        </div>
+    </div>
+</div>
+
+````
+
+##### 先实现左右和底部的CSS样式
+
+````css
+                                                                                            CSS
+.cube_left .cube_action{
+    left: -75px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.cube_right .cube_action{
+    right: -75px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.cube_action{
+    background-color: #fafafa;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    width: 40px;
+    height: 40px;
+    opacity: 0.15;
+    position: absolute;
+    transition: opacity 0.5s ease;
+    z-index: 5;
+}
+.cube_action:hover{
+    opacity: 1;
+}
+.cube_action::before{
+    border-bottom: 4px solid #111;
+    border-right: 4px solid #111;
+    content: '';
+    display: block;
+    height: 25%;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    width: 25%;
+    transform: translate(-70%, -50%) rotate(-45deg);
+}
+.cube_left .cube_action::before{
+    transform: translate(-40%, -50%) rotate(135deg);
+}
+.indicators{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -80px;
+    padding: 20px;
+    text-align: center;
+    opacity:0;
+    transition: opacity .3s;
+}
+.container:hover .indicators{
+    opacity: 1;
+}
+.indicators .indicator{
+    background-color: #fafafa;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin: 6px;
+    opacity: .15;
+}
+.controller{
+    display: none;
+}
+
+````
+
+##### 写完上面的代码后并不能看到我们想要的结果, 因为它们都需要hover事件来触发。
+
+##### 现在我们来设置最外层`.container` 的样式以及定义一个入场动画。
+
+````css
+                                                                                            CSS
+.container{
+    width: 600px;
+    height: 600px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -300px;
+    margin-left: -300px;
+    transition: all .5s ease;
+    transform: scale(0.25);
+}
+.container:hover {
+    transform: scale(1);
+}
+.container:hover .cube-wrap .cube{
+    animation: entrance .5s ease ;
+}
+@keyframes entrance {
+    from {
+        transform: rotateX(-225deg) rotateY(-225deg);
+    }
+}
+````
+
+##### 当鼠标移入立方体时, 动画由`spin` 被替换为`entrance` 。
+
+##### 那么重点再次出现了, 到底CSS是如何实现点击切换轮播图片的呢？
+
+##### 原理很简单, 其实就是搭配前面提到的label标签和input标签从而实现了惊人的效果。
+
+````css
+                                                                                             CSS
+.controller:nth-of-type(1):checked ~ .cube{
+    transform: translateZ(-150px);
+}
+.controller:nth-of-type(2):checked ~ .cube{
+    transform: translateZ(-150px) rotateX(-180deg) ;
+}
+.controller:nth-of-type(3):checked ~ .cube{
+    transform: translateZ(-150px) rotateY(90deg) ;
+}
+.controller:nth-of-type(4):checked ~ .cube{
+    transform: translateZ(-150px) rotateY(-90deg) ;
+}
+.controller:nth-of-type(5):checked ~ .cube{
+    transform: translateZ(-150px) rotateX(-90deg) ;
+}
+.controller:nth-of-type(6):checked ~ .cube{
+    transform: translateZ(-150px) rotateX(90deg) ;
+}
+
+````
+
+##### 无论是点击左右的按钮, 还是点击底部的按钮, 我们都触发了label标签的for属性从而联动了对应的input标签中的checked属性。 
+
+##### 至于该如何将对应的那一面反转到正对屏幕的这一面, 只需要在构造立方体每一面的转换中将符号反向即可。
+
+##### 值得注意的是这里我们运用的CSS选择器也算是一个技巧, `:nth-of-type(n)` 选择的是相同类型标签的第n个标签, `~` 符号选择的是同级中的标签。
+
+##### [彻底理解nth-child和nth-of-type的区别](https://www.cnblogs.com/pssp/p/5991029.html)
+
+##### 现在我们回过头来再仔细看下开头的HTML结构, `.indicators` 里面的label标签中的for好像能够明白其逻辑, 即点击哪一个标签就触发哪一个input标签的checked属性从而进行相应的3D转换。 可是左右按钮中的label标签里的for数字顺序咋看起来不对劲呢？
+
+##### 在这里我自己也琢磨了很久, 费了很大的功夫才想明白原来`.cube_left` 或者`.cube_right` 中相应的6个label标签是重合在一起的, 而且都为`display:none` , 这就很有意思了, 来看看接下来的代码。 
+
+````css
+                                                                                             CSS
+.container:hover .controller:nth-of-type(1):checked ~ .cube_left .cube_action:nth-of-type(1), 
+.container:hover .controller:nth-of-type(1):checked ~ .cube_right .cube_action:nth-of-type(1){
+    display: block;
+}
+.container:hover .controller:nth-of-type(2):checked ~ .cube_left .cube_action:nth-of-type(2),
+.container:hover .controller:nth-of-type(2):checked ~ .cube_right .cube_action:nth-of-type(2){
+    display: block;
+}
+......
+......
+......
+.container:hover .controller:nth-of-type(6):checked ~ .cube_left .cube_action:nth-of-type(6),
+.container:hover .controller:nth-of-type(6):checked ~ .cube_right .cube_action:nth-of-type(6){
+    display: block;
+}
+````
+
+#####  现在我们默认的是`.controller` 中的第一个元素被选中, 即它的checked属性为true。因此左右按钮里label标签中的第一个显示为`display:block` , 若现在点击左边的按钮, 我们希望立方体的底部呈现在屏幕的正面, 所以for应该设置为6。若点击右边按钮其第一个label标签的for应该设置为2。按照这个逻辑, 我们也就明白了为什么`.cube_left` 或`.cube_right` 中的for属性是乱序的原因了。
+
+##### 至此, 我们已经讲解了如何实现一个旋转魔方轮播所需的主要内容和知识点, 剩下的就是一些完善界面的零碎的CSS样式, 在这里就不再展示。写完这篇文章后确实感觉自己对CSS方面的知识又熟悉了不少... 但是前端的主力还是JavaScript, 5月份又得继续深入学习JS方面的知识嘞......
+
+> ##### PS：本文参考内容
+
+[关于transform的详细讲解(张鑫旭)](http://www.zhangxinxu.com/wordpress/2012/09/css3-3d-transform-perspective-animate-transition/)
+
+[animation详解](https://www.w3cplus.com/content/css3-animation)
+
+[彻底理解nth-child和nth-of-type的区别](https://www.cnblogs.com/pssp/p/5991029.html)
+
+[demo的原始出处](http://www.jq22.com/demo/pure-css-interactive20161114/)
+
+
+

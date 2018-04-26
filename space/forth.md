@@ -1,0 +1,627 @@
+> ### 前端笔记(四)  ES6常用语法
+
+#### 解构赋值
+
+````  javascript
+
+//数组的解构赋值
+let [a, b, c] = [1, 2, 3];
+a // 1
+b // 2
+c // 3
+
+let [a, [[b], c]] = [1, [[2], 3]];
+a // 1
+b // 2
+c // 3
+
+let [a, , c] = [1, 2, 3];
+a // 1
+c // 3
+
+let [a, ...b] = [1, 2, 3];
+a // 1
+b // [2, 3]
+
+//默认值引用其他变量
+let [x = 1, y = x] = []; // x = 1, y = 1
+let [x = 1, y = x] = [2]; // x = 2, y = 2
+let [x = 1, y = x] = [1, 2]; // x = 1, y = 2
+let [x = y, y = 1] = []; // Error x用到默认值y时, y还没被声明。
+
+//对象的解构赋值
+let { foo: one, bar: two } = { foo: 'aaa', bar: 'bbb' };
+one // 'aaa'
+two // 'bbb'
+foo // foo is not defined 对象的解构赋值是先找到同名属性, 然后再赋值给对应的变量
+
+let { foo, bar } = { foo: 'aaa', bar: 'bbb' }; //简写
+foo // 'aaa'
+bar // 'bbb'
+
+//指定默认值
+let { x, y = 5 } = { x: 1 };
+x // 1
+y // 5
+
+let { x: y = 3 } = { x: 5 };
+y // 5
+
+//字符串的解构赋值
+const [a, b, c, d, e] = 'hello';
+a // 'h'
+b // 'e'
+c // 'l'
+d // 'l'
+e // 'o'
+
+let { length: len } = 'hello';
+len // 5
+
+//函数参数的解构赋值
+[[1, 2], [3, 4]].map(([a, b]) => a + b );
+// [3, 7]
+
+//函数参数指定默认值
+function desc({ x = 0, y = 0} = {}) {
+  return [x, y];
+}
+desc({ x: 3, y: 8 }) // [3, 8]
+desc({ x: 3 }) // [3, 0]
+desc({}) // [0, 0]
+desc() // [0, 0]
+
+//undefined触发函数参数的默认值
+[1, undefined, 3].map((x = '2') => x);
+// [1, 2, 3]
+
+/*--常见用途--*/
+
+//交换变量
+let x = 1, y = 2;
+[x, y] = [y, x];
+
+//函数返回多个值
+function example() {
+  var obj = {
+    foo: [1, 2, 3],
+    bar: { d: 4, e: 5 }
+  }
+  return obj;
+}
+let { foo: [a, b, c], bar : { d, e } } = example();
+
+//提取JSON数据
+var json = {
+  result: 'success',
+  info: {
+    id: 22,
+    name: 'RetroAstro',
+    avatar: 'cream.png',
+    detail: ['111', '222', '333']
+  }
+}
+let { result, info: { id , name, avatar, detail: [a, b, c] } } = json;
+
+//遍历Map接口
+var map = new Map([
+    ['first', 'one'],
+    ['second', 'two']
+]);
+for ( let [key, value] of map.entries() ) {
+   console.log(key, value);
+}
+````
+
+#### 模板字符串
+
+````javascript
+
+//常用实例
+var obj = {
+  username: 'RetroAstro',
+  avatar: 'user.png',
+  info() {
+    var x = 1, y = 2;
+    return x + y;
+  }
+}
+var str = 
+`<div class="info">
+    <span class="username">${obj.username}</span>
+    <img class="avatar" src="${obj.avatar}">
+    <span class="coin-num">${obj.info()}</span>
+ </div>
+`
+wrapper.insertAdjancentHTML('afterEnd', dom);
+
+//标签模板
+function passthru(literals, ...values) {
+   var output = '';
+   for ( var index = 0; index < values.length; index++ ) {
+      output += literals[index] + values[index];
+   }
+   output += literals[index];
+   console.log(literals);
+   return output;
+}
+
+var total = 30;
+passthru`The total is ${total} (${total * 1.05} with tax)`;
+// The total is 30 (31.5 with tax)
+
+/*
+ @ ...values为rest参数写法, 即在参数个数不确定时这么写, 此时的values相当于一个数组。
+ @ passthru`The total is ${total} (${total * 1.05} with tax)` 等价于下面的写法。
+ @ passthru(["The total is ", " (", " with tax)"], 30, 31.5)
+ */
+
+//用途——过滤HTML敏感字符串
+function safeHTML(template) {
+   var str = template[0];
+   for ( var i = 1; i < arguments.length; i++ ) {
+      var arg = '' + arguments[i];
+      str += arg
+             .replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+             .replace(/>/g, '&gt;');
+      str += template[i];
+   }
+   return str;
+}
+var user = '<script>alert(123)</script>';
+safeHTML`<p>${user} has sent you a message.</p>`;
+// "<p>&lt;script&gt;alert(123)&lt;/script&gt; has sent you a message.</p>"
+````
+
+#### 函数的扩展	
+
+````javascript
+
+//函数参数默认值
+var $ = {
+  ajax({
+     method = 'GET',
+     url = '',
+     async = true,
+     headers = {},
+     encType = '',
+     data = '',
+     dataType = 'json',
+     success = function() {},
+     error = function() {}  
+  }) {
+     // start xhr ...
+  }
+}
+
+//箭头函数
+var x = 5, y = 6;
+    
+var f = () => { return x + y }; 
+//等价于
+var f = () => x + y;
+//等价于
+var f = function() {
+   return x + y;
+}
+
+//rest参数和变量解构
+var f = ({first, last}, ...values) => [first, values, last];
+f({ first: 'Retro', last: 'Astro' }, 2, 3, 4, 5);
+// ["Retro", [2, 3, 4, 5], "Astro"]
+    
+//箭头函数中的this指向
+function foo() {
+  setTimeout(() => {
+    console.log(this.id);
+  }, 1000)
+}
+// 等价于
+function foo() {
+  var that = this;
+  setTimeout(function() {
+     console.log(that.id);
+  }, 1000)
+}
+foo.call({id: '233'}); // 233
+
+/*
+ @ 箭头函数里面根本没有自己的this, 而是引用外层的this。
+ @ 箭头函数里没有arguments, super, new.target 三个变量, 而指向外层函数对应的值。
+ */
+
+//尾调用优化
+function fatorial(n) {
+   if ( n === 1 ) { return 1; }
+   return n * factorial(n-1); // 一般的递归, 保存多个调用记录, 非常消耗内存。
+}
+
+function factorial(n, total) {
+   if ( n === 1 ) { return total; }
+   return factorial(n-1, n * total); // 尾递归优化
+}
+
+//蹦床函数, 将递归执行转为循环执行。
+function trampoline(f) {
+   while ( f && f instanceof Function ) {
+      f = f();
+   }
+   return f;
+}
+
+function sum(x, y) {
+   if (y > 0) {
+      return sum.bind(null, x+1, y-1);
+   } else {
+      return x;
+   }
+}
+trampoline(sum(1, 100000)); // 100001
+
+//tco函数 —— 更好的尾递归优化实现
+function tco(f) {
+  
+   var value;
+   var active = false;
+   var accumulated = [];
+  
+   return function accumulator() {
+      accumulated.push(arguments); // 传入类数组对象[x, y]且每次的值在改变。
+      if ( !active ) {
+         active = true;
+         while ( accumulated.length ) {
+            value = f.apply(this, accumulated.shift());
+            /*
+            调用外部函数, 此时while循环继续。
+            active为true, 但accumulated中参数变化。
+            当accumulated中的值为空时, x值value接收并返回。
+            */
+         }
+         active = false;
+         return value;
+      }
+   }
+   
+}
+
+var sum = tco(function(x, y) {
+   if ( y > 0 ) {
+      return sum(x+1, y-1); // 相当于再次执行accumulator函数, 且传入新的参数值。 
+   } else {
+      return x;
+   }
+})
+sum(1, 100000) // 100001
+
+/*
+ @ 尾递归实现 —— 改写一般的递归函数, 确保最后一步只调用自身。
+ --- 尾递归优化 ---
+ @ 实现意义 —— 防止栈溢出, 相对节省内存。(函数里面调用函数才叫递归执行, 产生前面的副作用)
+ @ 实现要点 —— 减少调用栈, 采用循环从而替换掉递归。
+ */
+````
+
+#### 数组的扩展
+
+````javascript
+
+//扩展运算符
+...[1, 2, 3, 4, 5] 
+// 1 2 3 4 5
+
+var nodeList = document.querySelectorAll('div');
+[...nodeList];
+// [<div>, <div>, <div>]
+
+var arr1 = [1, 2, 3];
+var arr2 = [4, 5, 6];
+arr1.push(...arr2)
+console.log(arr1) // [1, 2, 3, 4, 5, 6]
+
+let map = new Map([
+    [1, 'one'],
+    [2, 'two'],
+    [3, 'three']
+])
+
+let arr = [...map.keys()]; // [1, 2, 3]
+
+/*
+ --- 用途 ---
+ @ 将数组转为用逗号分隔的参数序列
+ @ 可以展开任何含有Iterator接口的对象, 从而将其转变为数组。
+ */
+
+// Array.from()
+function foo() {
+  var args = Array.from(arguments);
+  // ...
+}
+
+let spans = document.querySelectorAll('span');
+// ES5
+let names1 = Array.prototype.map.call(spans, s => s.textContent); 
+// ES6
+let names2 = Array.from(spans, s => s.textContent);
+
+/*
+ --- 用途 ---
+ @ 将两类对象转为真正的数组。
+ @ 类似数组的对象 (array-like object)
+ @ 可遍历对象 (iterable)
+ */
+
+// Array.of() --- 将一组值转换为数组
+Array.of(1, 2, 3, 4, 5) // [1, 2, 3, 4, 5]
+
+// find() --- 找出数组中符合条件的第一个成员并返回该成员。
+[1, 3, -8, 10].find( n => n < 0 ); // -8
+
+// findIndex() --- 找出数组中符合条件的第一个成员并返回该成员的位置。
+[1, 3, -8, 10].findIndex( n => n < 0 ); // 2
+
+// keys() values() entries() --- 返回一个遍历器对象, 用for...of循环遍历。
+var arr = ['a', 'b'];
+
+for ( let key of arr.keys() ) {
+   console.log(key);
+}
+// 0 1
+
+for ( let value of arr[Symbol.iterator]() ) {
+   console.log(value); // Chrome, Firefox 未实现 arr.values()
+}
+// a b
+
+for ( let [key, value] of arr.entries() ) {
+   console.log(key, value);
+}
+// 0 "a"
+// 1 "b"
+
+// includes() --- 表示某个数组是否包含特定的值, 返回一个布尔值。(第二个参数表示搜索的索引位置)
+[1, 2, 3].includes(2, 1) // true
+[1, 2, 3].includes(2, 2) // false
+````
+
+#### 对象的扩展
+
+```javascript
+
+// Object.is() --- 比较两个数是否严格相等, 比 === 符号更好。
++0 === -0 // true
+NaN === NaN // false
+Object.is(+0, -0) // false
+Object.is(NaN, NaN) // true
+
+// Object.assign() --- 将源对象所有可枚举的属性复制到目标对象。
+// 属于浅复制, 对于嵌套的对象只是复制对象的引用。
+
+/* --- 常见用途 ---*/
+
+// 为对象添加属性。
+class Point {
+  constructor(x, y) {
+     Object.assign(this, {x, y}); 
+  }
+}
+
+//为对象添加方法
+var foo = {};
+
+Object.assign(foo.prototype, {
+  method1() {
+      //...
+  },
+  method2() {
+      //...
+  },
+  method3() {
+      //...
+  }
+})
+
+// 克隆对象, 保持继承链。(浅复制) 
+function clone(obj) {
+   var proto = Object.getPrototypeOf(obj);
+   return Object.assign(Object.create(proto), obj);
+}
+
+// Object.setPrototypeOf()  Object.getPrototypeOf()
+// 设置或获取原型对象。
+
+let proto = {};
+let obj = { x: 10 };
+Object.setPrototypeOf(obj, proto);
+proto.y = 20;
+obj.y; // 20;
+Object.getPrototypeOf(obj) === proto // true
+
+// Object.keys()  Object.values()  Object.entries()
+// 对可遍历的属性起作用, 且可以用for...of循环遍历。
+
+let { keys, values, entries } = Object;
+let obj = { a: 1, b: 2, c: 3 };
+
+for ( let key of keys(obj) ) {
+   console.log(key); // a b c
+}
+
+for ( let value of values(obj) ) {
+   console.log(value); // 1 2 3
+}
+
+for ( let [key, value] of entries(obj) ) {
+   console.log([key, value]); // ["a", 1]  ["b", 2]  ["c", 3]
+}
+```
+
+#### Set, Map数据结构
+
+```javascript
+
+// Set --- 成员值唯一的数据结构
+
+// 数组去重
+var arr = [1, 2, 3, 3, 4, 5, 5];
+// 方法一
+[...new Set(arr)]; // [1, 2, 3, 4, 5]
+// 方法二
+Array.from(new Set(arr)); // [1, 2, 3, 4, 5]
+
+/*
+ @ 具有 add(), delete(), has(), clear() 方法。
+ @ 包含 keys(), values(), entries(), forEach() 遍历操作方法。
+ */
+
+// Map --- 属于键值对的数结构, 且与对象不同。各种类型的值都可以当作键。
+
+// Map转数组
+var arr = ['a', 'b', 'c'];
+let map = new Map( arr.map((p, i) => [i, p]) );
+[...map]  // [[0, "a"], [1, "b"], [2, "c"]]
+
+// Map转对象
+function mapToObj(map) {
+   let obj = {};
+   for ( var [k, v] of map ) {
+      obj[k] = v;
+   }
+   return obj;
+}
+
+// 对象转Map
+function objToMap(obj) {
+   let map = new Map();
+   for ( var k of Object.keys(obj) ) {
+      map.set(k, obj[k]);
+   }
+   return map;
+}
+
+/*
+ @ 具有 set(key, value), get(key), has(key), delete(key), clear() 方法。
+ @ 包含 keys(), values(), entries(), forEach() 等遍历方法。 
+ */
+
+// WeakSet, WeakMap
+
+// WeakSet 实例
+class Foo {
+  constructor() {
+    foo.add(this);
+  }
+  method() {
+    if ( !foo.has(this) ) {
+       throw new TypeError('只能在Foo的实例上使用!');
+    }
+  }
+}
+
+// WeakMap 实例
+let Element = document.querySelector('.logo');
+let wm = new WeakMap();
+wm.set(Element, { timesClicked: 0 });
+
+Element.addEventListener('click', () => {
+  var logo = wm.get('Element');
+  logo.timesClicked++;
+});
+// 一旦DOM节点被删除, 点击一次更新的状态就会消失。
+
+const listener = new WeakMap();
+listener.set(element, handler);
+element.addEventListener('click', listener.get(element), false);
+// 一旦DOM对象消失, 其绑定的监听函数也会消失。
+
+
+/*
+ --- 特点 ---
+ @ 其成员都只能是对象而且为弱引用, 即垃圾回收机制不考虑对该对象的引用。
+ @ 所引用的对象在外部被清除, 里面的键名对象和对应的键值对自动消失从而防止了内存泄漏。
+ */
+```
+
+#### Iterator 和 for...of 循环
+
+```javascript
+
+/*
+ --- Iterator ---
+ @ 它是一种遍历器接口, 为各种不同的数据结构提供统一的访问机制。
+ --- 作用 --- 
+ @ 使数据结构的成员能够按某种次序排序。
+ @ 部署了Iterator接口的数据结构可供for...of循环遍历。
+ */
+
+/*
+ --- 原生具备Iterator接口的数据结构 ---
+ @ Array
+ @ Map
+ @ Set
+ @ String
+ @ TypedArray
+ @ 函数的arguments对象
+ @ NodeList对象
+ */
+
+// 为对象添加Iterator接口
+var obj = {
+    data: ['hello', 'world'],
+    [Symbol.iterator]() {
+       const self = this;
+       let index = 0;
+       return {
+          next() {
+             if ( index < self.data.length ) {
+                return {
+                   value: self.data[index++],
+                   done: false
+                }
+             } else {
+                return {
+                   value: undefined,
+                   done: true
+                }
+             }
+          }
+       }
+    }
+}
+
+for ( var x of obj ) {
+   console.log(x);
+}
+// hello world
+
+var itrable = obj[Symbol.iterator]();
+iterable.next();
+// {value: "hello", done: false}
+iterable.next();
+// {value: "world", done: false}
+iterable.next();
+// {value: "undefined", done: true}
+
+/*
+ --- for...of ---
+ @ 用于遍历键值, 遍历数组时只返回具有数字索引的属性比for...in更加可靠。
+ @ 用于循环遍历部署了Symbol.iterator接口属性的数据结构。
+ */
+
+let arr = [3, 5, 7];
+arr.foo = 'hello';
+
+for (let i in arr) {
+   console.log(i) // "0", "1", "2", "foo"
+}
+
+for (let i of arr) {
+   console.log(i) // "3", "5", "7"
+}
+```
+
+
+
+##### 参考书籍 :  《 ES6标准入门 》( 阮一峰 )
+
