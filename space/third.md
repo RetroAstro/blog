@@ -485,7 +485,7 @@ ElevatorModule.init();
 
 一些需要注意的常见js事件属性：
 
-* #####event.stopPropagation()
+* ##### event.stopPropagation()
 
 
 终止事件在传播过程的捕获、目标处理或起泡阶段进一步传播。调用该方法后，该节点上处理该事件的处理程序将被调用，事件不再被分派到其他节点。
