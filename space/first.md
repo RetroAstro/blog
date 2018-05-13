@@ -270,7 +270,7 @@ function setTimeout(fn, delay) {
 }
 ````
 
-* #### 显示绑定
+* #### 显式绑定
 
 
 通过` Function.prototype` 中的`call` , `apply` , `bind` 来直接指定`this`的绑定对象。
