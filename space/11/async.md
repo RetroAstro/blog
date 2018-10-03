@@ -70,7 +70,7 @@ fooThunk2((sum) => {
 
 #### Promise
 
-在 ES6 没有发布之前，作为异步编程主力军的回调函数一直被人诟病，其原因有太多比如回调地狱、代码执行顺序难以追踪、后期因代码变得十分复杂导致无法维护和更新等，而 Promise 的出现在很大程度上改变了之前的窘境。话不多说先直接上代码看看它的用法，然后再总结下我自己认为在 Promise 中很重要的几个点。
+在 ES6 没有发布之前，作为异步编程主力军的回调函数一直被人诟病，其原因有太多比如回调地狱、代码执行顺序难以追踪、后期因代码变得十分复杂导致无法维护和更新等，而 Promise 的出现在很大程度上改变了之前的窘境。话不多说先直接上代码提前感受下它的魅力，然后我再总结下自己认为在 Promise 中很重要的几个点。
 
 ```js
 const foo = function () {
@@ -180,13 +180,78 @@ purchase('https://cosmos-alien.com/api/getUserInfo')
 
 > 关注点分离的价值在于简化计算机程序的开发和维护。当关注点分开时，各部分可以重复使用，以及独立开发和更新。具有特殊价值的是能够稍后改进或修改一段代码，而无需知道其他部分的细节必须对这些部分进行相应的更改。
 >
-> *一一   维基百科*
+> *一一    维基百科*
 
 显然在 `Promise` 中 `new Promise()` 返回的对象就是关注点分离中分离出来的那个关注对象。
 
 **要点二：不可变性 ( 能够信任 )**
 
+细心的读者可能会发现，要点一中基于事件监听的反控制反转仍然没有解决最重要的信任问题，收费操作仍旧可以因为第三方 API 的多次调用而被触发且执行多次。幸运的是现在我们拥有 `Promise` 这样强大的机制，才得以让我们从信任危机中解脱出来。所谓不可变性就是：
 
+##### Promise 只能被决议一次，如果代码中试图多次调用 `resolve(..)` 或者 `reject(..)` ，Promise 只会接受第一次决议，决议后就是外部不可变的值，因此任何通过 `then(..)` 注册的回调只会被调用一次。
+
+现在要点一中的示例代码就可以最终更改为：
+
+```js
+const request = require('request')
+
+const purchase = function (url) {
+    return new Promise((resolve, reject) => {
+        request(url, (err, response, data) => {
+            if (err) reject(err)
+            if (response.statusCode === 200) {
+                resolve(data)
+            }
+        })
+    })
+}
+
+purchase('https://cosmos-alien.com/api/getUserInfo')
+.then((data) => {
+    chargeUser(data)
+})
+.catch((err) => {
+    console.error(err)
+})
+```
+
+**要点三：错误处理及一些细节**
+
+还记得最开始讲 Promise 时的那一段代码吗？我们把打印结果的那部分代码再次拿出来看看。
+
+```js
+p1(callback)
+.then((sum) => {
+    console.log(sum)
+}, (err) => {
+    console.error(err) // Add is not allowed.
+})
+.finally(() => {
+    console.log('Triggered once the promise is settled.')
+})
+
+p2(callback)
+.then((sum) => {
+    console.log(sum) // 10
+    return 'evil 😡'
+})
+.then((unknown) => {
+    throw new Error(unknown)
+})
+.catch((err) => {
+    console.error(err) // Error: evil 😡
+})
+```
+
+首先我们说下 `then(..)` ，它的第一个参数接受 `promise` 对象中 `resolve(..)` 的值，第二个参数则作为错误处理函数处理在 Promise 中可能发生的错误。
+
+而在 Promise 中有两种错误可能会出现，一种是显式 `reject(..)` 抛出的错误，另一种则是代码自身有错误会被 Promise 捕捉，通过 `then(..)` 中的错误处理函数我们可以接受到它前面 `promise` 对象中出现的错误，而如果在 `then(..)` 接受 `resolve(..)` 值的函数中也出现错误，该错误则会被下一个 `then(..)` 的错误处理函数所接受 ( 有两个前提，第一是要写出这个 `then(..)` 否则该错误最终会在全局被抛出，第二个则是要确保前一个`then(..)` 在它的 Promise 决议后调用的是第一个参数而不是错误处理函数 )。
+
+`catch(..)` 相当于 `then(..)` 中的错误处理函数 ，只是省略了第一个参数。
+
+`finally(..)` 在 Promise 一旦决议后 ( 无论是 `resolve` 还是 `reject` ) 都会被执行。
+
+`then(..)` 、`catch(..)` 、`finally(..)` 都是异步调用，作为事件循环中的微队列任务执行。
 
 ### 常见异步模式
 
