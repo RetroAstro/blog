@@ -113,6 +113,9 @@ p1(callback)
 }, (err) => {
     console.error(err) // Add is not allowed.
 })
+.finally(() => {
+    console.log('Triggered once the promise is settled.')
+})
 
 p2(callback)
 .then((sum) => {
@@ -126,6 +129,61 @@ p2(callback)
     console.error(err) // Error: evil 😡
 })
 ```
+
+##### 要点一：反控制反转 ( 关注点分离 )
+
+什么是反控制反转呢？要理解它我们应该先弄清楚控制反转的含义，来看一段伪代码。
+
+```js
+const request = require('request')
+
+const purchase = function (url) {
+    request(url, (err, response, data) => {
+        if (err) return console.error(err)
+        if (response.statusCode === 200) {
+            chargeUser(data)
+        }
+    })
+}
+
+purchase('https://cosmos-alien.com/api/getUserInfo')
+```
+
+显然在这里 `request` 模块属于第三方库是不能够完全信任的，假如某一天该模块出了 `bug` , 原本只会向目标 `url` 发送一次请求却变成了多次，相应的我们的 `chargeUser` 函数也就是收费操作就会被执行多次，最终导致用户被多次收费，这样的结果完全就是噩梦！然而这就是控制反转，即把自己的代码交给第三方掌控，因此是完全不可信任的。
+
+那么反控制反转现在我们可以猜测它的含义应该就是将控制权交还到我们自己写的代码中，而要实现这点通常我们会引入一个第三方协商机制，在 `Promise` 之前我们会通过事件监听的形式来解决这类问题。现在我们将代码更改如下：
+
+```js
+const request = require('request')
+const events = require('events')
+
+const listener = new events.EventEmitter()
+
+listener.on('charge', (data) => {
+    chargeUser(data)
+})
+
+const purchase = function (url) {
+    request(url, (err, response, data) => {
+        if (err) return console.error(err)
+        if (response.statusCode === 200) {
+            listener.emit('charge', data)
+        }
+    })
+}
+
+purchase('https://cosmos-alien.com/api/getUserInfo')
+```
+
+更改代码之后我们会发现控制反转的恢复其实是更好的实现了关注点分离，我们不用去关心 `purchase` 函数内部具体发生了什么，只需要知道它在什么时候完成，之后我们的关注点就从 `purchase` 函数转移到了 `listener` 对象上。我们可以把 `listener` 对象提供给代码中多个独立的部分，在 `purchase` 函数完成后，它们也能收到通知并进行下一步的操作。以下是维基百科上关于关注点分离的一部分介绍。
+
+> 关注点分离的价值在于简化计算机程序的开发和维护。当关注点分开时，各部分可以重复使用，以及独立开发和更新。具有特殊价值的是能够稍后改进或修改一段代码，而无需知道其他部分的细节必须对这些部分进行相应的更改。  *一一   维基百科*
+
+显然在 `Promise` 中 `new Promise()` 返回的对象就是关注点分离中分离出来的那个关注对象。
+
+##### 要点二：不可变性 ( 能够信任 )
+
+
 
 ### 常见异步模式
 
