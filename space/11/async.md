@@ -31,7 +31,7 @@
 
 ### 为异步而生的 JS 语法
 
-回望历史，在最近几年里 ECMAScript 标准几乎每年都有版本的更新，也正是因为有像 ES6 这种在语言特性上大版本的更新，到了现今的 8102 年， JS 中的异步编程相对于那个只有回调函数的远古时代有了很大的进步。下面我将介绍 callback 、Promise 、generator 、async / await 的基本用法，为后文几种异步模式不同版本的逻辑代码实现打下基础。
+回望历史，在最近几年里 ECMAScript 标准几乎每年都有版本的更新，也正是因为有像 ES6 这种在语言特性上大版本的更新，到了现今的 8102 年， JS 中的异步编程相对于那个只有回调函数的远古时代有了很大的进步。下面我将介绍 callback 、Promise 、generator 、async / await 的基本用法以及如何在异步编程中使用它们。
 
 #### callback
 
@@ -184,7 +184,7 @@ purchase('https://cosmos-alien.com/api/getUserInfo')
 
 显然在 `Promise` 中 `new Promise()` 返回的对象就是关注点分离中分离出来的那个关注对象。
 
-**要点二：不可变性 ( 值得信任 )**
+**要点二：不可变性 ( 值得信任 ） **
 
 细心的读者可能会发现，要点一中基于事件监听的反控制反转仍然没有解决最重要的信任问题，收费操作仍旧可以因为第三方 API 的多次调用而被触发且执行多次。幸运的是现在我们拥有 `Promise` 这样强大的机制，才得以让我们从信任危机中解脱出来。所谓不可变性就是：
 
@@ -257,7 +257,9 @@ p2(callback)
 
 #### generator
 
-generator 也叫做生成器，它是 ES6 中引入的一种新的函数类型，在函数内部它可以多次启动和暂停，从而形成阻塞同步的代码。我们先来看看它的基本用法然后再来探究一下它的工作原理。
+generator 也叫做生成器，它是 ES6 中引入的一种新的函数类型，在函数内部它可以多次启动和暂停，从而形成阻塞同步的代码。下面我将先讲述它的基本用法然后是它在异步编程中的使用最后会简单探究一下它的工作原理。
+
+**基本用法** 
 
 ```js
 let a = 2
@@ -307,11 +309,83 @@ for (let v of it2) { console.log(v) } // 5 6 7 8
 
 可以看到我们自己实现的迭代器不仅能够手动进行迭代，还能被 `for..of` 自动迭代展开，这是因为在 ES6 中只要对象具有 `Symbol.iterator` 属性且该属性返回的是一个迭代器对象，就能够被 `for..of` 所消费。
 
-回头来看最开始的那个 generator 代码示例中生成器产生的迭代器对象 `it` ，似乎它比普通的迭代器有着更强大的功能，其实就是与 `yield` 表达式紧密相连的**消息双向传递**。现在我先来总结一下自己认为在生成器中十分重要的点，然后再来分析下那段示例代码的完整执行过程。
+回头来看最开始的那个 generator 示例代码中生成器产生的迭代器对象 `it` ，似乎它比普通的迭代器有着更强大的功能，其实就是与 `yield` 表达式紧密相连的**消息双向传递**。现在我先来总结一下自己认为在生成器中十分重要的点，然后再来分析下那段示例代码的完整执行过程。
 
 **每次调用 `it.next()` 后生成器函数内的代码就会启动执行且返回一个 `{done: .. , value: ..}` 对象，一旦遇到 `yield` 表达式就会暂停执行，如果此时 `yield` 表达式后面跟有值例如 `yield val`，此时这个 `val` 就会被传入返回对象中 `value` 对应的键值，当再次调用 `it.next()` 时 `yield` 的暂停效果被取消，如果此时的 `next` 为形如 `it.next(val)` 的调用，`yield` 表达式就会被 `val` 所替换。这就是生成器内部与迭代器对象外部之间的消息双向传递。**
 
 弄清了生成器中重要的特性后要理解开头的那段代码就不难了，首先执行第一个 `it.next().value` ，遇到第一个 `yield` 后生成器暂停执行，此时变量 `x` 接受到的值为 6，在全局环境下执行 `a++` 后再次执行 `it.next(x * 5).value` 生成器继续执行且传入值 30，因此变量 `b` 的值就为 33，当遇到第二个 `yield` 后生成器又暂停执行，并且将值 8 传出给变量 `y` 。再次执行 `a++` ，最后执行 `it.next(x + y)` 恢复生成器执行并传入值 14，最终计算 `a + b + c` 便可得到值 84。
+
+**在异步编程中使用生成器**
+
+既然现在我们已经知道了生成器内部拥有能够多次启动或暂停代码执行的强大能力，将它用于异步编程中也便是理所当然的事情了。先来看一个异步迭代生成器的例子。
+
+```js
+const request = require('request')
+
+const foo = function () {
+    request('https://cosmos-alien.com/some.url', (err, response, data) => {
+        if (err) it.throw(err)
+        if (response.statusCode === 200) {
+            it.next(data)
+        }
+    })
+}
+
+const main = function *() {
+    try {
+        let result = yield foo()
+        console.log(result)
+    }
+    catch (err) {
+        console.error(err)
+    }
+}
+
+let it = main()
+
+it.next()
+```
+
+这个例子的逻辑很简单，调用 `it.next()` 后生成器启动，遇到 `yield` 时生成器暂停运行，但此时 `foo` 函数已经执行即网络请求已经发出，等到有响应结果时如果出错则将错误抛回生成器内部由 `try..catch` 同步捕获，否则将返回的 `data` 作为传回生成器的值在恢复执行的同时将 `data` 赋值给变量 `result` ，最后打印 `result` 得到我们想要的结果。 
+
+在 ES6 中最完美的世界就是生成器 ( 看似同步的异步代码 ) 和 Promise ( 可信任可组合 ) 的结合，因此我们现在再来看一个由生成器 + Promise 实现异步操作的例子。
+
+```js
+const axios = require('axios')
+
+const foo = function () {
+    return axios({
+        method: 'GET',
+        url: 'https://cosmos-alien.com/some.url'
+    })
+}
+
+const main = function *() {
+    try {
+        let result = yield foo()
+        console.log(result)
+    }
+    catch (err) {
+        console.error(err)
+    }
+}
+
+let it = main()
+
+let p = it.next().value
+
+p.then((data) => {
+    it.next(data)
+}, (err) => {
+    it.throw(err)
+})
+```
+
+这个例子跟上面异步迭代生成器的例子几乎是差不多的，唯一不同的就是 `yield` 传递出去的是一个 `promise` 对象，之后我们在 `then(..)` 中来恢复执行生成器里下一步的操作或是抛出一个错误。
+
+**工作原理**
+
+
 
 ### 常见异步模式
 
