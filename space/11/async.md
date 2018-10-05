@@ -288,21 +288,17 @@ const iterator = function (obj) {
         },
         next() {
             current++
-            if (current < obj.length) {
-                return { done: false, value: obj[current] }
-            } else {
-                return { done: true, value: obj[current] }
-            }
+            return { done: current < obj.length ? false : true, value: obj[current] }
         }
     }
 }
 
 let it1 = iterator([1,2,3,4])
 
-console.log(it1.next().value) // 1
-console.log(it1.next().value) // 2
-console.log(it1.next().value) // 3
-console.log(it1.next().value) // 4
+it1.next().value // 1
+it1.next().value // 2
+it1.next().value // 3
+it1.next().value // 4
 
 let it2 = iterator([5,6,7,8])
 
