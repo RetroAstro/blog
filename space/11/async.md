@@ -247,11 +247,75 @@ p2(callback)
 
 而在 Promise 中有两种错误可能会出现，一种是显式 `reject(..)` 抛出的错误，另一种则是代码自身有错误会被 Promise 捕捉，通过 `then(..)` 中的错误处理函数我们可以接受到它前面 `promise` 对象中出现的错误，而如果在 `then(..)` 接受 `resolve(..)` 值的函数中也出现错误，该错误则会被下一个 `then(..)` 的错误处理函数所接受 ( 有两个前提，第一是要写出这个 `then(..)` 否则该错误最终会在全局抛出，第二个则是要确保前一个 `then(..)` 在它的 Promise 决议后调用的是第一个参数而不是错误处理函数 )。
 
+一些值得注意的细节：
+
 `catch(..)` 相当于 `then(..)` 中的错误处理函数 ，只是省略了第一个参数。
 
 `finally(..)` 在 Promise 一旦决议后 ( 无论是 `resolve` 还是 `reject` ) 都会被执行。
 
 `then(..)` 、`catch(..)` 、`finally(..)` 都是异步调用，作为事件循环中的微队列任务执行。
+
+#### generator
+
+generator 也叫做生成器，它是 ES6 中引入的一种新的函数类型，在函数内部它可以多次启动和暂停，从而形成阻塞同步的代码。我们先来看看它的基本用法然后再来探究一下它的工作原理。
+
+```js
+let a = 2
+
+const foo = function *(x, y) {
+    let b = (yield x) + a
+    let c = (yield y) + b
+    console.log(a + b + c)
+}
+
+let it = foo(6, 8)
+
+let x = it.next().value
+a++
+let y = it.next(x * 5).value
+a++
+it.next(x + y) // 84
+```
+
+从上面的代码我们可以看到与普通的函数不同，生成器函数执行后返回的是一个迭代器对象，用来控制生成器的暂停和启动。在常见的设计模式中就有一种模式叫做迭代器模式，它指的是提供一种方法顺序访问一个聚合对象中的各个元素，而又不需要暴露该对象的内部表示。迭代器对象 `it` 包含一个 `next(..)` 方法且在调用之后返回一个 `{ done: .. , value: .. }` 对象，现在我们先来自己实现一个简单的迭代器。
+
+```js
+const iterator = function (obj) {
+    let current = -1
+    return {
+        [Symbol.iterator]() {
+            return this
+        },
+        next() {
+            current++
+            if (current < obj.length) {
+                return { done: false, value: obj[current] }
+            } else {
+                return { done: true, value: obj[current] }
+            }
+        }
+    }
+}
+
+let it1 = iterator([1,2,3,4])
+
+console.log(it1.next().value) // 1
+console.log(it1.next().value) // 2
+console.log(it1.next().value) // 3
+console.log(it1.next().value) // 4
+
+let it2 = iterator([5,6,7,8])
+
+for (let v of it2) { console.log(v) } // 5 6 7 8
+```
+
+可以看到我们自己实现的迭代器不仅能够手动进行迭代，还能被 `for..of` 自动迭代展开，这是因为在 ES6 中只要对象具有 `Symbol.iterator` 属性且该属性返回的是一个迭代器对象，就能够被 `for..of` 所消费。
+
+回头来看最开始的那个 generator 代码示例中生成器产生的迭代器对象 `it` ，似乎它比普通的迭代器有着更强大的功能，其实就是与 `yield` 表达式紧密相连的**消息双向传递**。现在我先来总结一下自己认为在生成器中十分重要的点，然后再来分析下那段示例代码的完整执行过程。
+
+**每次调用 `it.next()` 后生成器函数内的代码就会启动执行且返回一个 `{done: .. , value: ..}` 对象，一旦遇到 `yield` 表达式就会暂停执行，如果此时 `yield` 表达式后面跟有值例如 `yield val`，此时这个 `val` 就会被传入返回对象中 `value` 对应的键值，当再次调用 `it.next()` 时 `yield` 的暂停效果被取消，如果此时的 `next` 为形如 `it.next(val)` 的调用，`yield` 表达式就会被 `val` 所替换。这就是生成器内部与迭代器对象外部之间的消息双向传递。**
+
+弄清了生成器中重要的特性后要理解开头的那段代码就不难了，首先执行第一个 `it.next().value` ，遇到第一个 `yield` 后生成器暂停执行，此时变量 `x` 接受到的值为 6，在全局环境下执行 `a++` 后再次执行 `it.next(x * 5).value` 生成器继续执行且传入值 30，因此变量 `b` 的值就为 33，当遇到第二个 `yield` 后生成器又暂停执行，并且将值 8 传出给变量 `y` 。再次执行 `a++` ，最后执行 `it.next(x + y)` 恢复生成器执行并传入值 14，最终计算 `a + b + c` 便可得到值 84。
 
 ### 常见异步模式
 
