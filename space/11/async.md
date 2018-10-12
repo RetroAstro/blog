@@ -6,7 +6,7 @@
 
 ### 同步与异步
 
-我们知道无论是在浏览器端还是在服务器 ( Node ) 端，JS 的执行都是在单线程下进行的。我们以浏览器中的 JS 执行线程为例，在这个线程中 JS 引擎会创建执行上下文栈 ( 全局、函数、eval )，这个时候我们的代码则会像一系列的任务一样在这些执行栈中按照后进先出 ( LIFO ) 的方式依次执行。而同步最大的特性就是会阻塞后面任务的执行，比如此时 JS 正在执行大量的计算，这个时候就会使线程阻塞从而导致页面渲染加载不连贯 ( 在浏览器端的 Event Loop 中每次执行栈中的任务执行完毕后都会去检查并执行事件队列里面的任务直到队列中的任务为空，而事件队列中的任务又分为微队列与宏队列，当微队列中的任务执行完后才会去执行宏队列中的任务，而在微队列任务执行完到宏队列任务开始之前浏览器的 GUI 线程会执行一次页面渲染 ( UI rendering )，这也就解释了为什么在执行栈中进行大量的计算时会阻塞页面的渲染 ) 。
+我们知道无论是在浏览器端还是在服务器 ( Node ) 端，JS 的执行都是在单线程下进行的。我们以浏览器中的 JS 执行线程为例，在这个线程中 JS 引擎会创建执行上下文栈，之后我们的代码就会作为执行上下文 ( 全局、函数、eval ) 像一系列任务一样在执行上下文栈中按照后进先出 ( LIFO ) 的方式依次执行。而同步最大的特性就是会阻塞后面任务的执行，比如此时 JS 正在执行大量的计算，这个时候就会使线程阻塞从而导致页面渲染加载不连贯 ( 在浏览器端的 Event Loop 中每次执行栈中的任务执行完毕后都会去检查并执行事件队列里面的任务直到队列中的任务为空，而事件队列中的任务又分为微队列与宏队列，当微队列中的任务执行完后才会去执行宏队列中的任务，而在微队列任务执行完到宏队列任务开始之前浏览器的 GUI 线程会执行一次页面渲染 ( UI rendering )，这也就解释了为什么在执行栈中进行大量的计算时会阻塞页面的渲染 ) 。
 
 与同步相对的异步则可以理解为在异步操作完成后所要做的任务，它们通常以回调函数或者 Promise 的形式被放入事件队列，再由事件循环 ( Event Loop ) 机制在每次轮询时检查异步操作是否完成，若完成则按事件队列里面的执行规则来依次执行相应的任务。也正是得益于事件循环机制的存在，才使得异步任务不会像同步任务那样完全阻塞 JS 执行线程。
 
@@ -387,7 +387,73 @@ p.then((data) => {
 
 在讲了那么多关于 generator 生成器的使用后，相信读者也跟我一样想知道生成器究竟是如何实现能够控制函数内部代码的暂停和启动，从而形成阻塞同步的效果。
 
+我们先来简单了解下有限状态机 ( FSM ) 这个概念，维基百科上给出的解释是表示有限个状态以及在这些状态之间的转移和动作等行为的数学模型。简单的来说，它有三个主要特征：
 
+1. 状态总数 ( state ) 是有限的
+2. 任一时刻，只处在一种状态之中
+3. 某种条件下，会从一种状态转变 ( transition ) 到另一种状态
+
+其实生成器就是通过暂停自己的作用域 / 状态来实现它的魔法的，下面我们就通过上文的生成器 + Promise 的例子为基础，用有限状态机的方式来阐述生成器的基本工作原理。
+
+```js
+let stateRequest = {
+    done: false,
+    transition(message) {
+        this.state = this.stateResult
+        console.log(message)
+        return foo()
+    }
+}
+
+let stateResult = {
+    done: true,
+    transition(data) {
+        let result = data
+        console.log(result)
+    }
+}
+
+let stateError = {
+    transition(err) {
+        console.error(err)
+    }
+}
+
+let it = {
+    init() {
+        this.stateRequest = Object.create(stateRequest)
+        this.stateResult = Object.create(stateResult)
+        this.stateError = Object.create(stateError)
+        this.state = this.stateRequest
+    },
+    next(data) {
+        if (this.state.done) {
+            return {
+                done: true,
+                value: undefined
+            }
+        } else {
+            return {
+                done: this.state.done,
+                value: this.state.transition.call(this, data)
+            }
+        }
+    },
+    throw(err) {
+        return {
+            done: true,
+            value: this.stateError.transition(err)
+        }
+    }
+}
+
+it.init()
+it.next('The request begins !')
+```
+
+在这里我使用了行为委托模式和状态模式实现了一个简单的有限状态机，而它却展现了生成器中核心部分的工作原理，下面我们来逐步分析它是如何运行的。
+
+首先这里我们自己创建的 `it` 对象就相当于生成器函数执行返回的迭代器对象，我们把上文生成器 + Promise 示例中的 `main` 函数代码分为了三个状态并将跟该状态有关的行为封装到了 `stateRequest` 、`stateResult` 、`stateError` 三个对象中。然后我们再调用 `init(..)` 将 `it` 对象上的行为委托到那三个对象上并初始化当前的状态对象。
 
 ### 常见异步模式
 
