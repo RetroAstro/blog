@@ -459,7 +459,53 @@ it.next('The request begins !')
 
 #### async / await
 
+终于讲到最后一个异步语法了，作为压轴的身份出场，据说 async / await 是 JS 异步编程中的终极解决方案。话不多说，先直接上代码看看它的基本用法，然后我们再来探讨一下它的实现原理。
 
+```js
+const foo = function (time) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve(time + 200)
+        }, time)
+    })
+}
+
+const step1 = time => foo(time)
+const step2 = time => foo(time) 
+const step3 = time => foo(time)
+
+const main = async function () {
+    try {
+        console.time('run')
+        let time1 = 200
+        let time2 = await step1(time1)
+        let time3 = await step2(time2)
+        await step3(time3)
+        console.log(`All steps took ${time1 + time2 + time3} ms.`)
+        console.timeEnd('run')
+    } catch(err) {
+        console.error(err)
+    }
+}
+
+main()
+// All steps took 1200 ms.
+// run: 1222.87939453125ms
+```
+
+我们可以看到 async 函数跟生成器函数极为相似，只是将之前的 `*` 变成了 `async` ，`yield` 变成了 `await` 。其实它就是一个能够自动执行的 generator 函数，我们不用再通过手动执行 `it.next(..)` 来控制生成器函数的暂停与启动。
+
+`await` 帮我们做到了在同步阻塞代码的同时还能够监听 Promise 对象的决议，一旦 `promise` 决议，原本暂停执行的 async 函数就会恢复执行。这个时候如果决议是 `resolve` ，那么返回的结果就是 `resolve` 出来的值。如果决议是 `reject` ，我们就必须用 `try..catch` 来捕获这个错误，因为它相当于执行了 `it.throw(err)` 。
+
+下面直接给出一种主流的 async / await 语法的版本实现代码：
+
+```js
+
+```
+
+**一些需要注意的点**
+
+async 函数执行后返回的是 Promise 对象。await 表达式不仅仅等待 Promise 对象，还可以等待任意表达式的结果，只是当等待 Promise 对象时会产生暂停阻塞的效果直到 Promise 决议，而等待其他表达式时就相当于直接返回该表达式的结果。
 
 ### 常见异步模式
 
