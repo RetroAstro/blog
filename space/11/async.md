@@ -536,6 +536,57 @@ function fn() {
 
 从上面的代码我们可以看出 async 函数执行后返回的是一个 Promise 对象，然后使用递归的方法去自动执行生成器函数的暂停与启动。如果调用 `it.next().value` 传出来的是一个 `promise` ，则用 `Promise.resolve()` 方法将其展开，当这个 `promise` 决议时就可以重新启动执行生成器函数或者抛出一个错误被 `try..catch` 所捕获并最终在 async 函数返回的 Promise 对象的错误处理函数中处理。
 
+**关于 async / await 的执行顺序**
+
+下面给出一道关于 async / await 执行顺序的经典面试题，网上给出的解释给我感觉似乎很含糊。在这里我们结合上文所讲的 generator 函数运行机制和 async / await 实现原理来具体阐述下为什么执行顺序是这样的。
+
+```js
+async function async1(){
+    console.log('async1 start')
+    await async2()
+    console.log('async1 end')
+}
+
+async function async2(){
+    console.log('async2')
+}
+
+console.log('script start')
+
+setTimeout(() => {
+    console.log('setTimeout')
+})
+
+async1()
+
+new Promise((resolve) => {
+    console.log('promise1')
+    resolve()
+})
+.then(() => {
+    console.log('promise2')
+})
+
+console.log('script end')
+```
+
+将这段代码放在浏览器中运行，最终的结果这样的：
+
+```js
+script start
+async1 start
+async2
+promise1
+script end
+promise2
+async1 end
+setTimeout
+```
+
+其实最主要的地方还是要分清在执行栈中同步执行的任务与事件队列中异步执行的任务。首先我们执行同步任务，打印 `script start` ，调用函数 `async1` ，在我们遇到 `await` 表达式后就会暂停函数 `async1` 的执行。因为在这里它相当于 `yield async2()` ，根据上文的 async / await 原理实现代码可以看出，当自动调用 `it.next()` 时遇到第一个 `yield` 后会暂停执行，但此时函数 `async2` 已经执行。上文还提到过 `async` 函数在执行完后会返回一个 Promise 对象，故此时 `it.next().value` 的值就是一个 `promise` 。接下来要讲的就是重点啦 ！！！
+
+**我们用 `Promise.resolve()` 去异步地展开一个 `promise` ，因此第一个放入事件队列中的微队列任务其实就是这个 `promise` 。之后我们再继续运行执行栈中剩下的同步任务，此时打印出 `promise1` 和 `script end` ，同时第二个异步任务被加入事件队列中的微队列。同步的任务执行完了，现在来执行异步任务，首先将微队列中第一个放入的那个 `promise` 拿到执行栈去执行，这个时候之前 `Promise.resolve` 后面注册的回调任务才会作为第三个任务加入到事件队列中的微队列里去。然后我们执行微队列中的第二个任务，打印 `promise2`，再执行第三个任务即调用 `step(() => it.next(val))` 恢复 `async` 函数继续执行，打印 `async1 end` 。最后，因为微队列总是抢占式的在宏队列之前插入执行，故只有当微队列中没有了任务以后，宏队列中的任务才会执行，故最终打印出 `setTimeout` 。**   
+
 ### 常见异步模式
 
 > 在软件开发中有着设计模式这一专业术语，通俗一点来讲设计模式其实就是在某种场合下针对某个问题的一种解决方案。
