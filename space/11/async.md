@@ -500,12 +500,41 @@ main()
 下面直接给出一种主流的 async / await 语法的版本实现代码：
 
 ```js
+const runner = function (gen) {
+    return new Promise((resolve, reject) => {
+        var it = gen()
+        const step = function (execute) {
+            try {
+                var next = execute()
+            } catch (err) {
+                reject(err)
+            }
+            
+            if (next.done) return resolve(next.value)
+            
+            Promise.resolve(next.value)
+            .then(val => () => it.next(val))
+            .catch(err => () => it.throw(err))
+        }
+        step(() => it.next())
+    })
+}
 
+async function fn() {
+    // ...
+}
+
+// 等同于
+
+function fn() {
+    const gen = function *() {
+        // ...
+    }
+    runner(gen)
+}
 ```
 
-**一些需要注意的点**
-
-async 函数执行后返回的是 Promise 对象。await 表达式不仅仅等待 Promise 对象，还可以等待任意表达式的结果，只是当等待 Promise 对象时会产生暂停阻塞的效果直到 Promise 决议，而等待其他表达式时就相当于直接返回该表达式的结果。
+从上面的代码我们可以看出 async 函数执行后返回的是一个 Promise 对象，然后使用递归的方法去自动执行生成器函数的暂停与启动。如果调用 `next(..)` 传出来的是一个 `promise` ，则用 `Promise.resolve()` 方法将其展开，当这个 `promise` 决议时就可以重新启动执行生成器函数或者抛出一个错误被 `try..catch` 所捕获并最终在 async 函数返回的 Promise 对象的错误处理函数中处理。
 
 ### 常见异步模式
 
