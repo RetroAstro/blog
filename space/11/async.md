@@ -513,8 +513,8 @@ const runner = function (gen) {
             if (next.done) return resolve(next.value)
             
             Promise.resolve(next.value)
-            .then(val => () => it.next(val))
-            .catch(err => () => it.throw(err))
+            .then(val => step(() => it.next(val)))
+            .catch(err => step(() => it.throw(err)))
         }
         step(() => it.next())
     })
