@@ -534,7 +534,7 @@ function fn() {
 }
 ```
 
-从上面的代码我们可以看出 async 函数执行后返回的是一个 Promise 对象，然后使用递归的方法去自动执行生成器函数的暂停与启动。如果调用 `next(..)` 传出来的是一个 `promise` ，则用 `Promise.resolve()` 方法将其展开，当这个 `promise` 决议时就可以重新启动执行生成器函数或者抛出一个错误被 `try..catch` 所捕获并最终在 async 函数返回的 Promise 对象的错误处理函数中处理。
+从上面的代码我们可以看出 async 函数执行后返回的是一个 Promise 对象，然后使用递归的方法去自动执行生成器函数的暂停与启动。如果调用 `it.next().value` 传出来的是一个 `promise` ，则用 `Promise.resolve()` 方法将其展开，当这个 `promise` 决议时就可以重新启动执行生成器函数或者抛出一个错误被 `try..catch` 所捕获并最终在 async 函数返回的 Promise 对象的错误处理函数中处理。
 
 ### 常见异步模式
 
