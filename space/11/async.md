@@ -94,9 +94,7 @@ const promisify = function (fn) {
 
 const callback = function (x, y, isAdd, resolve, reject) {
     if (isAdd) {
-        setTimeout(() => {
-            resolve(x + y)
-        }, 2000)
+        resolve(x + y)
     } else {
         reject('Add is not allowed.')
     }
@@ -600,6 +598,34 @@ setTimeout
 
 1. 多个异步任务同时执行，等待所有任务都返回结果后才开始进行下一步的操作。
 2. 多个异步任务同时执行，只返回最先完成异步操作的那个任务的结果然后再进行下一步的操作。
+
+```js
+// index.js
+const fs = require('fs')
+const path = require('path')
+
+const addAll = () => console.log(countArray.reduce((prev, cur) => prev + cur))
+
+let dir = path.join(__dirname, 'files')
+
+let taskLength, taskCount = 0, countArray = []
+
+fs.readdir(dir, (err, files) => {
+    if (err) return console.error(err)
+    taskLength = files.length
+    files.map((file) => {
+        let fileDir = path.join(dir, file)
+        fs.readFile(fileDir, { encoding: 'utf-8' }, (err, data) => {
+            if (err) return console.error(err)
+            let count = 0
+            data.split(' ').map(word => word === 'of' ? count++ : null)
+            countArray.push(count)
+            taskCount++
+            taskCount === taskLength ? addAll() : null
+        })
+    })
+})
+```
 
 **并发协作模式**
 
