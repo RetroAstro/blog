@@ -590,40 +590,47 @@ setTimeout
 
 > 在软件开发中有着设计模式这一专业术语，通俗一点来讲设计模式其实就是在某种场合下针对某个问题的一种解决方案。
 
-在 JS 异步编程的世界里，很多时候我们也会遇到因为是异步操作而出现的特定问题，而针对这些问题所提出的解决方案 ( 逻辑代码 ) 就是异步编程的核心，似乎在这里它跟设计模式的概念很相像，因此我便把它叫做异步模式。下面我将介绍常见的几种异步模式。
+在 JS 异步编程的世界里，很多时候我们也会遇到因为是异步操作而出现的特定问题，而针对这些问题所提出的解决方案 ( 逻辑代码 ) 就是异步编程的核心，似乎在这里它跟设计模式的概念很相像，所以我把它叫做异步模式。下面我将介绍几种常见的异步模式在简单的实际场景下的应用。
 
 **并发交互模式**
 
-当我们在同时执行多个异步任务时，这些任务的返回结果到达的时间往往是不确定的，因而会产生以下两种常见的场景：
+当我们在同时执行多个异步任务时，这些任务返回响应结果的时间往往是不确定的，因而会产生以下两种常见的需求：
 
 1. 多个异步任务同时执行，等待所有任务都返回结果后才开始进行下一步的操作。
 2. 多个异步任务同时执行，只返回最先完成异步操作的那个任务的结果然后再进行下一步的操作。
 
+##### 场景一：
+
+同时读取多个含有英文文章的 `txt` 文件内容，计算其中单词 `of` 的个数。
+
+1. 等待所有文件中的 `of` 个数计算完毕，再计算输出总的 `of` 数。
+2. 直接输出第一个计算完 `of` 的个数。
+
 ```js
-// index.js
 const fs = require('fs')
 const path = require('path')
 
-const addAll = () => console.log(countArray.reduce((prev, cur) => prev + cur))
+const addAll = (result) => console.log(result.reduce((prev, cur) => prev + cur))
 
 let dir = path.join(__dirname, 'files')
 
-let taskLength, taskCount = 0, countArray = []
-
 fs.readdir(dir, (err, files) => {
     if (err) return console.error(err)
-    taskLength = files.length
-    files.map((file) => {
-        let fileDir = path.join(dir, file)
-        fs.readFile(fileDir, { encoding: 'utf-8' }, (err, data) => {
-            if (err) return console.error(err)
-            let count = 0
-            data.split(' ').map(word => word === 'of' ? count++ : null)
-            countArray.push(count)
-            taskCount++
-            taskCount === taskLength ? addAll() : null
+    
+    let promises = files.map((file) => {
+        return new Promise((resolve, reject) => {
+            let fileDir = path.join(dir, file)
+            fs.readFile(fileDir, { encoding: 'utf-8' }, (err, data) => {
+                if (err) reject(err)
+                let count = 0
+                data.split(' ').map(word => word === 'of' ? count++ : null)
+                resolve(count)
+            })
         })
     })
+    
+    Promise.all(promises).then(result => addAll(result)).catch(err => console.error(err))
+    Promise.race(promises).then(result => console.log(result)).catch(err => console.error(err))
 })
 ```
 
