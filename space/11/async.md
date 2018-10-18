@@ -638,7 +638,7 @@ fs.readdir(dir, (err, files) => {
 
 ##### 场景二：
 
-利用 Node.js 实现图片爬虫，控制爬取时的并发量，一是防止被封 IP ，二是防止并发请求数过高使程序崩溃。
+利用 Node.js 实现图片爬虫，控制爬取时的并发量，一是防止 IP 被封掉 ，二是防止并发请求数过高使程序崩溃。
 
 ```js
 const fs = require('fs')
@@ -652,7 +652,7 @@ const isError = (err, res) => (err || res.statusCode !== 200) ? true : false
 
 const getImgUrls = function (pages) {
     return new Promise((resolve) => {
-        let limit = 5, number = 0, imgUrls = []
+        let limit = 8, number = 0, imgUrls = []
         const recursive = async function () {
             pages = pages - limit
             limit = pages >= 0 ? limit : (pages + limit)
@@ -673,24 +673,36 @@ const getImgUrls = function (pages) {
                 )
             }
             await Promise.all(arr)
-            if (limit === 5) return recursive()
+            if (limit === 8) return recursive()
             resolve(imgUrls)
         }
         recursive()
     })
 }
 
-const downloadImages = function (arr) {
-    let promises = arr.map((url) => {
-        let imgName = url.split('/').pop()
-        let imgPath = path.join(__dirname, `images/${imgName}`)
-        return new Promise((resolve) => {
-            let reqStream = request(url)
-            reqStream.pipe(fs.createWriteStream(imgPath))
-            reqStream.on('close', () => resolve())
+const downloadImages = function (imgUrls) {
+    console.log('\n Start to download images. \n')
+    let limit = 5
+    const recursive = async function () {
+        limit = imgUrls.length - limit >= 0 ? limit : imgUrls.length
+        let arr = imgUrls.splice(0, limit)
+        let promises = arr.map((url) => {
+            return new Promise((resolve) => {
+                let imgName = url.split('/').pop()
+                let imgPath = path.join(__dirname, `images/${imgName}`)
+                request(url)
+                .pipe(fs.createWriteStream(imgPath))
+                .on('close', () => {
+                    console.log(`${imgName} has been saved.`)
+                    resolve()
+                })
+            })
         })
-    })
-    Promise.all(promises).then(() => console.log('Download finished.'))
+        await Promise.all(promises)
+        if (imgUrls.length) return recursive()
+        console.log('\n All images have been downloaded.')
+    }
+    recursive()
 }
 
 request({
@@ -700,16 +712,14 @@ request({
     if (isError(err, res)) return console.log('Request failed.')
     let $ = cheerio.load(data)
     let pageNum = $('.pg-pagination li').length
+    console.log('Start to get image urls...')
     getImgUrls(pageNum)
     .then((result) => {
-        // downloadImages(result)
+        console.log(`Finish getting image urls and the number of them is ${result.length}.`)
+        downloadImages(result)
     })
 })
 ```
-
-**事件监听模式**
-
-采用事件驱动的形式，任务的执行不取决于代码的顺序，而取决于某个事件是否发生，若事件发生则该事件指定的回调函数就会被执行。
 
 **发布 / 订阅模式**
 

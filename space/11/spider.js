@@ -9,7 +9,7 @@ const isError = (err, res) => (err || res.statusCode !== 200) ? true : false
 
 const getImgUrls = function (pages) {
     return new Promise((resolve) => {
-        let limit = 5, number = 0, imgUrls = []
+        let limit = 8, number = 0, imgUrls = []
         const recursive = async function () {
             pages = pages - limit
             limit = pages >= 0 ? limit : (pages + limit)
@@ -30,24 +30,36 @@ const getImgUrls = function (pages) {
                 )
             }
             await Promise.all(arr)
-            if (limit === 5) return recursive()
+            if (limit === 8) return recursive()
             resolve(imgUrls)
         }
         recursive()
     })
 }
 
-const downloadImages = function (arr) {
-    let promises = arr.map((url) => {
-        let imgName = url.split('/').pop()
-        let imgPath = path.join(__dirname, `images/${imgName}`)
-        return new Promise((resolve) => {
-            let reqStream = request(url)
-            reqStream.pipe(fs.createWriteStream(imgPath))
-            reqStream.on('close', () => resolve())
+const downloadImages = function (imgUrls) {
+    console.log('\n Start to download images. \n')
+    let limit = 5
+    const recursive = async function () {
+        limit = imgUrls.length - limit >= 0 ? limit : imgUrls.length
+        let arr = imgUrls.splice(0, limit)
+        let promises = arr.map((url) => {
+            return new Promise((resolve) => {
+                let imgName = url.split('/').pop()
+                let imgPath = path.join(__dirname, `images/${imgName}`)
+                request(url)
+                .pipe(fs.createWriteStream(imgPath))
+                .on('close', () => {
+                    console.log(`${imgName} has been saved.`)
+                    resolve()
+                })
+            })
         })
-    })
-    Promise.all(promises).then(() => console.log('Download finished.'))
+        await Promise.all(promises)
+        if (imgUrls.length) return recursive()
+        console.log('\n All images have been downloaded.')
+    }
+    recursive()
 }
 
 request({
@@ -57,9 +69,11 @@ request({
     if (isError(err, res)) return console.log('Request failed.')
     let $ = cheerio.load(data)
     let pageNum = $('.pg-pagination li').length
+    console.log('Start to get image urls...')
     getImgUrls(pageNum)
     .then((result) => {
-        // downloadImages(result)
+        console.log(`Finish getting image urls and the number of them is ${result.length}.`)
+        downloadImages(result)
     })
 })
 
