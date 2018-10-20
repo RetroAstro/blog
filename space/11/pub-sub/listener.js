@@ -1,4 +1,3 @@
-
 class Listener {
     constructor() {
         this.eventList = {}
@@ -29,5 +28,9 @@ class Listener {
             }
         })
     }
+}
+
+module.exports = {
+    Listener: Listener
 }
 

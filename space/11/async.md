@@ -725,11 +725,133 @@ request({
 
 我们假定，存在一个"信号中心"，当某个任务执行完成，就向信号中心"发布" ( publish ) 一个信号，其他任务可以向信号中心"订阅" ( subscribe ) 这个信号，从而知道什么时候自己可以开始执行，当然我们还可以取消订阅这个信号。
 
-##### 场景三：
-
-实现一个简单的命令行聊天程序。
+我们先来实现一个简单的发布订阅对象：
 
 ```js
+class Listener {
+    constructor() {
+        this.eventList = {}
+    }
+    on(event, fn) {
+        if (!this.eventList[event]) this.eventList[event] = []
+        if (fn.name) {
+            let obj = {}
+            obj[fn.name] = fn
+            fn = obj
+        }
+        this.eventList[event].push(fn)
+    }
+    remove(event, fn) {
+        if (!fn) return console.error('Choose a named function to remove!')
+        this.eventList[event].map((item, index) => {
+            if (typeof item === 'object' && item[fn.name]) {
+                this.eventList[event].splice(index, 1)
+            }
+        })
+    }
+    emit(event, data) {
+        this.eventList[event].map((fn) => {
+            if (typeof fn === 'object') {
+                Object.values(fn).map((f) => f.call(null, data))
+            } else {
+                fn.call(null, data)
+            }
+        })
+    }
+}
 
+let listener = new Listener()
+
+function foo(data) { console.log('Hello ' + data) }
+
+listener.on('click', (data) => console.log(data))
+
+listener.on('click', foo)
+
+listener.emit('click', 'RetroAstro')
+
+// Hello
+// Hello RetroAstro
+
+listener.remove('click', foo)
+
+listener.emit('click', 'Barry Allen')
+
+// Barry Allen
 ```
+
+##### 场景三：
+
+监听 watch 文件夹，当里面的文件有改动时自动压缩该文件并保存到 done 文件夹中。
+
+```js
+// gzip.js
+const fs = require('fs')
+const path = require('path')
+const zlib = require('zlib')
+
+const gzipFile = function (file) {
+    let dir = path.join(__dirname, 'watch')
+    fs.readdir(dir, (err, files) => {
+        if (err) console.error(err)
+        files.map((filename) => {
+            let watchFile = path.join(dir, filename)
+            fs.stat(watchFile, (err, stats) => {
+                if (err) console.error(err)
+                if (stats.isFile() && file === filename) {
+                    let doneFile = path.join(__dirname, `done/${file}.gz`)
+                    fs.createReadStream(watchFile)
+                    .pipe(zlib.createGzip())
+                    .pipe(fs.createWriteStream(doneFile))
+                }
+            })
+        })
+    })
+}
+
+module.exports = {
+    gzipFile: gzipFile
+}
+```
+
+```js
+// watch.js
+const fs = require('fs')
+const path = require('path')
+
+const { gzipFile } = require('./gzip')
+const { Listener } = require('./listener')
+
+let listener = new Listener()
+
+listener.on('gzip', (data) => gzipFile(data))
+
+let dir = path.join(__dirname, 'watch')
+
+let wait = true
+
+fs.watch(dir, (event, filename) => {
+    if (filename && event === 'change' && wait) {
+        wait = false
+        setTimeout(() => wait = true, 100)
+        listener.emit('gzip', filename)
+    }
+})
+```
+
+### 结语
+
+对于 JavaScript 异步编程在这里我就讲这么多了，当然还有很多东西自己没有了解因此在本篇文章中没有涉及到，在前端学习的路上还得继续加油嘞 😄 。在这里还是给出上面三个场景代码的 [**GitHub 地址**]() 。
+
+**参考书籍及文章**
+
+* 《 你不知道的 JavaScript 》(上)  (中)
+* 《 JavaScript 设计模式与开发实践 》
+* 《 Node.js 实战 》( 第二版 )
+
+- [深入理解 JS 事件循环机制 ( 浏览器篇 )](http://lynnelv.github.io/js-event-loop-browser)
+- [深入理解 JS 事件循环机制 ( Node.js 篇 )](http://lynnelv.github.io/js-event-loop-nodejs)
+- [JavaScript 异步编程的四种方法](http://www.ruanyifeng.com/blog/2012/12/asynchronous%EF%BC%BFjavascript.html)
+
+* [从浏览器多进程到JS单线程，JS运行机制最全面的一次梳理](https://segmentfault.com/a/1190000012925872)
 
