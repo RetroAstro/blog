@@ -22,7 +22,7 @@
 
 **Node 端**
 
-![](https://user-gold-cdn.xitu.io/2018/5/21/163817de4a1ca52c?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+![](https://s1.ax1x.com/2018/10/25/iymcHP.png)
 
 **阅读链接**
 
@@ -252,6 +252,88 @@ p2(callback)
 `finally(..)` 在 Promise 一旦决议后 ( 无论是 `resolve` 还是 `reject` ) 都会被执行。
 
 `then(..)` 、`catch(..)` 、`finally(..)` 都是异步调用，作为 Event Loop 里事件队列中的微队列任务执行。
+
+**补充：手写一个 Promise**
+
+```js
+function iPromise(fn) {
+    let state = 'pending',
+        value = null,
+        error = null,
+        callbacks = []
+
+    this.then = function (onFulfilled, onRejected) {
+        return new iPromise((resolve, reject) => {
+            transition({
+                onFulfilled: onFulfilled,
+                onRejected: onRejected,
+                resolve: resolve,
+                reject: reject
+            })
+        })
+    }
+
+    function transition(callback) {
+        let result
+        switch (state) {
+            case 'pending':
+                callbacks.push(callback)
+                return
+            case 'resolved':
+                try {
+                    if (callback.onFulfilled) result = callback.onFulfilled(value)
+                } catch (e) {
+                    if (callback.onRejected) result = callback.onRejected(e)
+                }
+                break
+            case 'rejected':
+                if (callback.onRejected) result = callback.onRejected(error)
+                break
+        }
+        if (result instanceof iPromise) {
+            result.then(callback.resolve, callback.reject)
+            return
+        }
+        state === 'resolved' ? callback.resolve(result) : callback.reject(result)
+    }
+
+    function resolve(newValue) {
+        state = 'resolved'
+        value = newValue
+        execute()
+    }
+
+    function reject(err) {
+        state = 'rejected'
+        error = err
+        execute()
+    }
+
+    function execute() {
+        callbacks.length ? callbacks.map(callback => transition(callback)) : null
+    }
+
+    fn(resolve, reject)
+}
+
+var p = new iPromise((resolve) => {
+    setTimeout(() => resolve(2333), 1000)
+})
+
+p.then(res =>
+    new iPromise((resolve) => {
+        setTimeout(() => {
+            resolve(res)
+        }, 2000)
+    })
+).then(res =>
+    new iPromise((resolve, reject) => {
+        reject(res)
+    })
+).then(null, err => console.error(err)) // 2333
+```
+
+可以看到实现 Promise 的关键就是为其设置 `pending` 、`resolved` 、`rejected` 三种状态，而且只能由 `pending` 转换到 `resolved` 或者 `rejected` 。需要注意的是我们用 `then(..)` 注册的那些回调函数早在执行同步代码的时候就已经被缓存在对应 Promise 中的 `callbacks` 数组里 ( 如果此时的状态为 `pending` )，当异步操作完成后我们执行从 Promise 传递出来的 `resolve` 或者 `rejected` 函数去触发 `callbacks` 数组中相应函数的执行。我们还会发现 `then(..)` 方法是链式调用的，即在 Promise 内部当前一个 Promise 的 `then(..)` 注册的回调函数执行完后就会自动调用下一个 Promise 中的 `resolve` 函数，然后再去执行该 Promise 中 `callbacks` 数组里缓存的回调函数。
 
 #### generator
 
@@ -857,6 +939,7 @@ fs.watch(dir, (event, filename) => {
 - [深入理解 JS 事件循环机制 ( 浏览器篇 )](http://lynnelv.github.io/js-event-loop-browser)
 - [深入理解 JS 事件循环机制 ( Node.js 篇 )](http://lynnelv.github.io/js-event-loop-nodejs)
 - [JavaScript 异步编程的四种方法](http://www.ruanyifeng.com/blog/2012/12/asynchronous%EF%BC%BFjavascript.html)
+- [彻底理解 Promise 原理](https://segmentfault.com/a/1190000009478377#articleHeader4)
 - [async 函数的含义和用法](http://www.ruanyifeng.com/blog/2015/05/async.html)
 
 * [从浏览器多进程到 JS 单线程，JS 运行机制最全面的一次梳理](https://segmentfault.com/a/1190000012925872)
