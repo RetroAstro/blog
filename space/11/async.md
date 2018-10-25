@@ -18,7 +18,7 @@
 
 **浏览器端**
 
-![](https://user-gold-cdn.xitu.io/2018/1/20/16112dee30db2997?imageslim)
+![](https://s1.ax1x.com/2018/10/25/iym7Bq.png)
 
 **Node 端**
 
