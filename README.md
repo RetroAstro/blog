@@ -21,5 +21,3 @@
 * ##### [Vim 基础入门](./space/10.md)
 
 * ##### [JavaScript 异步编程](./space/11/async.md)
-
-* ##### 从 Koa.js 切入，浅析 Web 后台应用架构
