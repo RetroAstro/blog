@@ -8,11 +8,11 @@
 
 * ##### [ES6 常用语法](./space/4.md)
 
-* ##### [CSS 动画之旋转魔方轮播](./space/5.md)
+* ##### [CSS 动画之旋转魔方轮播](./space/5.md)  :star:
 
 * ##### [20行代码实现模板引擎](./space/6.md)
 
-* ##### [用 Service Worker 实现前端性能优化](./space/7.md)
+* ##### [用 Service Worker 实现前端性能优化](./space/7.md)  :star:
 
 * ##### [笔记 ~ 前端工程基础概览](./space/8/README.md)
 
@@ -20,4 +20,4 @@
 
 * ##### [Vim 基础入门](./space/10.md)
 
-* ##### [JavaScript 异步编程](./space/11/async.md)
+* ##### [JavaScript 异步编程](./space/11/async.md)  :star:
