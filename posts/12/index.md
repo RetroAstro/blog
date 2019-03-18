@@ -2,7 +2,7 @@
 
 自从 React 16.8 版本正式发布 React Hooks 以来已经过去一个多月了，而在这之前国内外对于 Hooks API 的讨论也一直是如火如荼地进行着。有些人觉得 Hooks API 很好用，而有些人会对它感到十分困惑。但 [Dan Abramov](https://github.com/gaearon) 说过，就像 React 在 2013 年刚出来的时候一样，Hooks API 也需要时间被开发者们接受和理解。本文主要是记录自己在 React Hooks 学习中认为比较重要的点和常见的坑，当然也会记录相关的最佳实践以便自己更加熟练地掌握此种 mental model ( 心智模型 ) 。
 
-### React Hooks 基本要领 
+### React Hooks 基本原理 
 
 组件中的每次 render 都有其特定且独立的 props 和 state ( 可以把每一次 render 看作是函数组件的再次调用 )，如果组件中含有定时器、事件处理器、其他的 API 甚至 useEffect，由于闭包的特性，在它们内部的代码都会立即捕获当前 render 的 props 和 state ，而不是最新的 props 和 state 。
 
