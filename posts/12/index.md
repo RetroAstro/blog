@@ -34,7 +34,7 @@ useEffect 的运行机制应该是先比较 deps ，若有不同则先 cleanup �
   * mount
   * unmount
 * 获取 state
-  * lastest
+  * latest
   * previous
 * 避免组件重渲染 ( **`useMemo`** ) 
 * 转发 ref ( **`useImperativeHandle`** ) 
