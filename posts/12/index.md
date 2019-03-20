@@ -80,7 +80,7 @@ useEffect(() => {
 
 它用于跟前一次 render 传入的 deps ( 依赖 ) 进行比较，为的是避免不必要的 effect 函数再次执行。useEffect 的运行机制应该是先比较 deps ，若有不同则执行先前的 cleanup 函数，然后再执行最新的 effect 函数，若相同则跳过上面的两个步骤。如果要用函数作为 useEffect 的第二个参数，则需要使用 useCallback ，其作用是为了避免该函数在组件更新时再次被创建，从而使 useEffect 第二个参数的作用失效。
 
-在这里我的理解是由于两个同名函数比较时总会返回 false ，而且使用 useCallback 也需要第二个参数，因此我猜测 React 最终还是以值的比较从而达到“缓存”函数的效果。
+在这里我的理解是由于两个同名函数比较时总会返回 false ，而且使用 useCallback 也需要第二个参数，因此我猜测 React 最终还是以值的比较来达到“缓存”函数的效果。
 
 ```js
 var a = function foo () {}
