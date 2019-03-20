@@ -118,7 +118,7 @@ function Child({ fetchData }) {
 
 下面是以三种不同的方式实现的例子。
 
-**常规 Hook**
+#### 常规 Hook
 
 ```jsx
 function App() {
@@ -192,7 +192,7 @@ function App() {
 }
 ```
 
-**抽象 custom Hook** 
+#### 抽象 custom Hook 
 
 ```jsx
 const useDataApi = (initialUrl, initialData) => {
@@ -277,7 +277,7 @@ function App() {
 }
 ```
 
-**使用 useReducer** 
+#### 使用 useReducer
 
 ```jsx
 const dataFetchReducer = (state, action) => {
@@ -351,7 +351,7 @@ const useDataApi = (initialUrl, initialData) => {
 
 ### 常见场景 React Hooks 实现 
 
-**生命周期**
+#### 生命周期
 
 组件挂载时调用
 
@@ -377,7 +377,7 @@ useEffect(() => {
 }, [])
 ```
 
-**获取 state** 
+#### 获取 state 
 
 获取组件最新的 state 
 
@@ -429,7 +429,7 @@ function usePrevious(value) {
 }
 ```
 
-**避免组件重渲染**
+#### 避免组件重渲染
 
 ```jsx
 function Parent({ a, b }) {
@@ -445,7 +445,7 @@ function Parent({ a, b }) {
 }
 ```
 
-**转发 ref**
+#### 转发 ref
 
 ```jsx
 function ParentInput() {
@@ -470,7 +470,7 @@ function ChildInput(props, ref) {
 }
 ```
 
-**使用 Hooks 实现简单的状态管理工具**
+#### 使用 Hooks 实现简单的状态管理工具
 
 借助 Hooks 和 Context 我们可以轻松地实现状态管理，下面是我自己实现的一个简单状态管理工具，已发布到 npm 上，后续可能有大的改进，感兴趣的可以关注下 :smile:。
 
