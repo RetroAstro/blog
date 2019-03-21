@@ -382,7 +382,7 @@ useEffect(() => {
 }, [])
 ```
 
-#### 获取 state 
+#### 使用 useRef 获取 state 
 
 获取组件最新的 state 
 
@@ -434,7 +434,7 @@ function usePrevious(value) {
 }
 ```
 
-#### 避免组件重渲染
+#### 使用 useMemo 避免组件重渲染
 
 ```jsx
 function Parent({ a, b }) {
