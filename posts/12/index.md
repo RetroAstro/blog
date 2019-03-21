@@ -114,7 +114,12 @@ function Child({ fetchData }) {
 
 ### React Hooks 网络请求最佳实践
 
-最后我们要实现的功能：动态请求、加载状态、错误处理、竞态处理。
+最后我们要实现的功能：
+
+* 动态请求
+* 加载状态
+* 错误处理
+* 竞态处理
 
 下面是以三种不同的方式实现的例子。
 
@@ -470,7 +475,7 @@ function ChildInput(props, ref) {
 }
 ```
 
-#### 使用 Hooks 实现简单的状态管理工具
+#### 利用 Hooks 实现简单的状态管理
 
 借助 Hooks 和 Context 我们可以轻松地实现状态管理，下面是我自己实现的一个简单状态管理工具，已发布到 npm 上，后续可能有大的改进，感兴趣的可以关注下 :smile:。
 
@@ -485,25 +490,28 @@ type ProviderProps = {
   children: React.ReactNode
 }
 
-type ContextProps = {
-  state?: object
-  dispatch?: (prop: object) => void
-}
-
 export default function createChrox (
   reducer: (state: object, action: object) => object, 
   initialState: object
 ) {
-  const Context = React.createContext<ContextProps>({})
+  const StateContext = React.createContext<object>({})
+  const DispatchContext = React.createContext<React.Dispatch<object>>(() => {})
 
   const Provider: React.FC<ProviderProps> = props => {
     const [state, dispatch] = React.useReducer(reducer, initialState)
 
     return (
-      <Context.Provider value={{ state, dispatch }}>
-        {props.children}
-      </Context.Provider>
+      <DispatchContext.Provider value={dispatch}>
+         <StateContext.Provider value={state}>
+            {props.children}
+         </StateContext.Provider>
+      </DispatchContext.Provider>
     )
+  }
+
+  const Context = {
+    state: StateContext,
+    dispatch: DispatchContext
   }
 
   return {
@@ -513,7 +521,7 @@ export default function createChrox (
 }
 ```
 
-然后下面实现的是一个 counter 的例子。
+然后下面是利用该状态管理工具实现的一个 counter 的例子。
 
 ```jsx
 import React, { useContext } from 'react'
@@ -523,31 +531,34 @@ import { countReducer, initialState } from './reducer'
 
 const { Context, Provider } = createChrox(countReducer, initialState)
 
+const Status = () => {
+  const state = useContext(Context.state)
+  return (
+    <span>{state.count}</span>
+  )
+}
+
 const Decrement = ({ context }) => {
-  const { dispatch } = useContext(context)
+  const dispatch = useContext(context)
   return (
     <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
   )
 }
 
 const Increment = ({ context }) => {
-  const { dispatch } = useContext(context)
+  const dispatch = useContext(context)
   return (
     <button onClick={() => dispatch({ type: 'increment' })}>+</button>
   )
 }
 
-const App = () => {
-  const { state } = useContext(Context)
-
-  return (
-   <>
-     <Decrement context={Context} />
-     <span>{state.count}</span>
-     <Increment context={Context} />
-   </>
-  )
-}
+const App = () => (
+  <>
+    <Decrement context={Context.dispatch} />
+    <Status />
+    <Increment context={Context.dispatch} />
+  </>
+)
 
 render(
   <Provider>
@@ -556,6 +567,11 @@ render(
   document.getElementById('root')
 )
 ```
+
+从上面可以看到我是基于 useReducer + useContext 来实现的状态管理，至于为什么要这样做，那是因为这样做有两个主要的好处：
+
+1. 当我们的 state 变得复杂起来，比如是一个嵌套着很多子数值类型的对象。使用 useReducer ，我们可以通过编写 reducer 函数 ( 如果 state 足够复杂甚至可以先拆分 reducer 最后再进行合并 ) 来轻松地实现状态管理。
+2. useReducer 返回的 **`dispatch`** 函数只会在组件挂载的时候初始化，而在之后的组件更新中并不会发生改变 ( 值得注意的是 useRef 也具有相同的特性 ) ，因此它相当于一种更好的 useCallback 。当遇到很深的组件树时，我们可以通过两个不同的 Context 将 useReducer 返回的 **`state`** 和 **`dispatch`** 分离，这样如果组件树底层的某个组件只需要 **`dispatch`** 函数而不需要 **`state`** ，那么当 **`dispatch`** 函数调用时该组件是不会被重新渲染的，由此我们便达到了性能优化的效果。
 
 ### 结语
 
