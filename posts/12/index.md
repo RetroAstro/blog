@@ -450,7 +450,7 @@ function Parent({ a, b }) {
 }
 ```
 
-#### 转发 ref
+#### 使用 useImperativeHandle 转发 ref
 
 ```jsx
 function ParentInput() {
