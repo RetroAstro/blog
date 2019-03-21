@@ -524,6 +524,24 @@ export default function createChrox (
 然后下面是利用该状态管理工具实现的一个 counter 的例子。
 
 ```jsx
+// reducer.js
+export const initialState = {
+  count: 0
+}
+
+export const countReducer = (state, action) => {
+  switch (action.type) {
+    case 'increment':
+      return { ...state, count: state.count + 1 }
+    case 'decrement':
+      return { ...state, count: state.count - 1 }
+    default:
+      return { ...state }
+  }
+}
+```
+
+```jsx
 import React, { useContext } from 'react'
 import { render } from 'react-dom'
 import createChrox from 'chrox'
