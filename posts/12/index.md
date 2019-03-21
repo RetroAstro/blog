@@ -481,7 +481,7 @@ function ChildInput(props, ref) {
 
 > [**chrox**](https://github.com/RetroAstro/chrox)
 
-源码只有几十行，所以给出的是 TS 的版本。
+目前的源码只有几十行，所以给出的是 TS 的版本。
 
 ```tsx
 import * as React from 'react'
@@ -521,7 +521,7 @@ export default function createChrox (
 }
 ```
 
-然后下面是利用该状态管理工具实现的一个 counter 的例子。
+下面是利用该状态管理工具实现的一个 counter 的例子。
 
 ```jsx
 // reducer.js
