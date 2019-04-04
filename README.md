@@ -20,9 +20,9 @@
 
 [Vim 基础入门](./posts/10.md)
 
-[JavaScript 异步编程](./posts/11/index.md)  :star::star::star:
+[JavaScript 异步编程](./posts/11/index.md)  :star::star:
 
-[React Hooks 札记](./posts/12/index.md) :star::star:
+[React Hooks 札记](./posts/12/index.md) :star:
 
 TypeScript 用法拾遗
 
