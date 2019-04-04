@@ -24,7 +24,7 @@
 
 [React Hooks 札记](./posts/12/index.md) :star::star:
 
-TypeScript 技巧拾遗
+TypeScript 用法拾遗
 
 
 
