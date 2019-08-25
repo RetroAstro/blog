@@ -14,7 +14,7 @@ const getImgUrls = function (pages) {
             pages = pages - limit
             limit = pages >= 0 ? limit : (pages + limit)
             let arr = []
-            for (let i = 1; i <=limit; i++) {
+            for (let i = 1; i <= limit; i++) {
                 arr.push(
                     new Promise((resolve) => {
                         request(target + `?set=${number++}`, (err, res, data) => {
@@ -76,4 +76,3 @@ request({
         downloadImages(result)
     })
 })
-
