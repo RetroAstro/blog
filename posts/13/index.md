@@ -28,25 +28,25 @@ Ruby 之父松本行弘在《代码的未来》一书中对领域特定语言 ( 
 理解 Babel 插件机制
 -----
 
-在讲了这么多概念之后，相信读者很容易就可以理解什么是 Babel 插件。从上文中我们知道 Babel 其实就是一个转译器，它会将 ES6+ 语法的代码解析为 AST ，通过对 AST 中节点的增加、删除、更改将其转换为符合 ES5 规范的 AST ，最终将 AST 翻译为 ES5 代码。下图展示了这个过程：
+在讲了这么多概念之后，相信读者很容易就可以理解什么是 Babel 插件。从上文中我们知道 Babel 其实就是一个转译器，它会将 ES6+ 语法的代码解析为 AST ，通过对 AST 中节点的增加、删除、更改将其转换为符合 ES5 规范的 AST ，最终将转换后的 AST 翻译为 ES5 代码。下图展示了这个过程：
 
 ![](./babel.png)
 
-Babel 的主要作用是 ES6+ 转 ES5 ，但若只有这一个功能，肯定不能够满足开发者的需求。而 Babel 插件机制则能够让开发者涉足转换 ( transform ) 阶段，通过 Babel 提供的相关 API 操纵 AST ，将原始代码最终转换为我们想要的目标代码。
+Babel 的主要作用是 ES6+ 转 ES5 ，但若只有这一个功能，肯定不能够满足开发者的需求。而 Babel 插件机制则能够让开发者涉足转换 ( transform ) 阶段，通过 Babel 提供的相关 API 操纵 AST ，并将原始代码最终转换为我们想要的目标代码。
 
 编写 Babel 插件的前提
 -----
 
-想要编写一个可用的 Babel 插件，是需要很多前置知识的。首先我们得理解基于 [ESTree](https://github.com/estree/estree) 的 AST 语法规范，通过 [AST Explorer](https://astexplorer.net/) 我们可以实时查看某段代码生成的 AST ，对不同类型的节点对象有更加深刻的认识。在理解 AST 其实就是用来描述代码的一种抽象形式后，我们还需要学习如何对 Babel 生成的 AST 进行增加、删除和更改。在这里推荐 [Babel Plugin Handbook](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md) ，里面完整地讲解了如何去写一个 Babel 插件，细读两遍之后写一个简单的 Babel 插件基本不在话下。下面是编写 Babel 插件时常用库的作用：
+想要编写一个可用的 Babel 插件，是需要很多前置知识的。首先我们得理解基于 [ESTree](https://github.com/estree/estree) 的 AST 语法规范，通过 [AST Explorer](https://astexplorer.net/) 我们可以实时查看某段代码生成的 AST ，对不同类型的节点对象有更加深刻的认识。在理解 AST 其实就是用来描述代码的一种抽象形式后，我们还需要学习如何对 Babel 生成的 AST 进行增加、删除和更改。在这里推荐 [Babel Plugin Handbook](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md) ，里面完整地讲解了如何去写一个 Babel 插件，细读两遍之后写一个简单的 Babel 插件基本不在话下。在编写 Babel 插件时，我们往往会用到以下几个 npm 包：
 
 * **@babel/parser** 
   *  将原始代码转换为能够让 Babel 操纵的 AST 。
 * **@babel/traverse** 
-  * 能够遍历 AST ，维护了整棵树的状态，并且负责替换、移除和添加节点。
+  * 能够遍历 AST ，维护着整棵树的状态，并且负责替换、移除和添加节点。
 * **@babel/types**
   * 是一个用于 AST 节点的 Lodash 式工具库。它包含了构造、验证以及变换 AST 节点的方法，对编写处理 AST 逻辑非常有用。
 * **@babel/generator**
-  * 将转换后的 AST 转换为目标代码。
+  * 将转换后的 AST 翻译为目标代码。
 
 开始编写 Babel 插件
 -----
