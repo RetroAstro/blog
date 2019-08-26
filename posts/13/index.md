@@ -17,18 +17,18 @@
 领域特定语言
 -----
 
-Ruby 之父松本行弘在《代码的未来》一书中对领域特定语言 ( DSL ) 有着这样的解释：
+Ruby 之父松本行弘在《代码的未来》一书中对领域特定语言 ( Domain Specific Language ) 有着这样的解释：
 
 > 所谓 DSL ，是指利用为特定领域 ( Domain ) 所专门设计的词汇和语法，简化程序设计过程，提高生产效率的技术，同时也让非编程领域专家的人直接描述逻辑成为可能。DSL 的优点是，可以直接使用其对象领域中的概念，集中描述 “想要做到什么” ( What ) 的部分，而不必对 “如何做到” ( How ) 进行描述。
 
-但 DSL 这个概念最早则是由 Martin Fowler 提出，他把 DSL 分为内部 DSL 和外部 DSL ，而实现外部 DSL 的理论基础就是编译原理。我们知道如果将计算机编程语言按抽象层次划分可以分为高级语言、汇编语言以及机器语言。DSL 则是基于高级语言之上的抽象层次。上文提到的 TypeScript ，ES6+ 以及 React 中的 JSX 、Vue 中的 Template 、基于 Node.js 的模版引擎 ejs / jade / nunjucks 等等。从某种层面上来讲，它们都可以被叫做 DSL 。
+但 DSL 这个概念最早是由 Martin Fowler 提出，他把 DSL 分为内部 DSL 和外部 DSL ，而实现外部 DSL 的理论基础就是编译原理。我们知道如果将计算机编程语言按抽象层次划分可以分为高级语言、汇编语言以及机器语言。DSL 则是基于高级语言之上的抽象层次。上文提到的 TypeScript ，ES6+ 以及 React 中的 JSX 、Vue 中的 Template 、基于 Node.js 的模版引擎 ejs / jade / nunjucks 等等。从某种层面上来讲，它们都可以被叫做 DSL 。
 
 如果想要具体了解 DSL 是什么，可以看看[**这篇文章**](https://juejin.im/post/5a3de2225188252b145b4000)。
 
 理解 Babel 插件机制
 -----
 
-在讲了这么多概念之后，相信读者很容易就可以理解什么是 Babel 插件。从上文中我们可以知道 Babel 其实就是一个转译器，它会将 ES6+ 语法的代码解析为 AST ，通过对 AST 中节点的增加、删除、更改将其转换为符合 ES5 规范的 AST ，最终将 AST 翻译为 ES5 代码。下图展示了这个过程：
+在讲了这么多概念之后，相信读者很容易就可以理解什么是 Babel 插件。从上文中我们知道 Babel 其实就是一个转译器，它会将 ES6+ 语法的代码解析为 AST ，通过对 AST 中节点的增加、删除、更改将其转换为符合 ES5 规范的 AST ，最终将 AST 翻译为 ES5 代码。下图展示了这个过程：
 
 ![](./babel.png)
 
@@ -37,7 +37,7 @@ Babel 的主要作用是 ES6+ 转 ES5 ，但若只有这一个功能，肯定不
 编写 Babel 插件的前提
 -----
 
-想要编写一个可用的 Babel 插件，是需要很多前置知识的。首先得理解基于 [ESTree](https://github.com/estree/estree) 的 AST 语法规范，通过 [AST Explorer](https://astexplorer.net/) 我们可以实时查看某段代码生成的 AST ，对不同类型的节点对象有更加深刻的认识。在理解了 AST 就是用来描述代码的一种抽象形式后，我们还需要学习如何对 Babel 生成的 AST 进行增加、删除和更改。这里推荐 [Babel Plugin Handbook](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md) ，里面完整地讲解了如何去写一个 Babel 插件，细读两遍之后写一个简单的 Babel 插件基本不在话下。在这里列举下编写 Babel 插件常用库的作用：
+想要编写一个可用的 Babel 插件，是需要很多前置知识的。首先我们得理解基于 [ESTree](https://github.com/estree/estree) 的 AST 语法规范，通过 [AST Explorer](https://astexplorer.net/) 我们可以实时查看某段代码生成的 AST ，对不同类型的节点对象有更加深刻的认识。在理解 AST 其实就是用来描述代码的一种抽象形式后，我们还需要学习如何对 Babel 生成的 AST 进行增加、删除和更改。在这里推荐 [Babel Plugin Handbook](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md) ，里面完整地讲解了如何去写一个 Babel 插件，细读两遍之后写一个简单的 Babel 插件基本不在话下。下面是编写 Babel 插件时常用库的作用：
 
 * **@babel/parser** 
   *  将原始代码转换为能够让 Babel 操纵的 AST 。
