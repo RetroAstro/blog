@@ -54,6 +54,7 @@ useEffect(() => {
 
   const fetchData = async () => {
   	const result = await axios(url)
+    
     if (!didCancel) {
         setData(result.data)
     }
@@ -129,9 +130,7 @@ function Child({ fetchData }) {
 function App() {
   const [data, setData] = useState({ hits: [] })
   const [query, setQuery] = useState('redux')
-  const [url, setUrl] = useState(
-    'http://hn.algolia.com/api/v1/search?query=redux'
-  )
+  const [url, setUrl] = useState('http://hn.algolia.com/api/v1/search?query=redux')
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
 
@@ -144,6 +143,7 @@ function App() {
 
       try {
         const result = await axios(url)
+        
         if (!didCancel) {
           setData(result.data)
         }
@@ -215,6 +215,7 @@ const useDataApi = (initialUrl, initialData) => {
 
       try {
         const result = await axios(url)
+        
         if (!didCancel) {
           setData(result.data)
         }
@@ -422,14 +423,17 @@ function Message() {
 function Counter() {
   const [count, setCount] = useState(0)
   const prevCount = usePrevious(count)
+  
   return <h1>Now: {count}, before: {prevCount}</h1>
 }
 
 function usePrevious(value) {
   const ref = useRef()
+  
   useEffect(() => {
     ref.current = value
   })
+  
   return ref.current
 }
 ```
@@ -469,6 +473,7 @@ function ParentInput() {
 
 function ChildInput(props, ref) {
   const inputRef = useRef(null)
+  
   useImperativeHandle(ref, () => inputRef.current)
 
   return <input type="text" name="child input" ref={inputRef} />
@@ -551,6 +556,7 @@ const { Context, Provider } = createChrox(countReducer, initialState)
 
 const Status = () => {
   const state = useContext(Context.state)
+  
   return (
     <span>{state.count}</span>
   )
@@ -558,6 +564,7 @@ const Status = () => {
 
 const Decrement = () => {
   const dispatch = useContext(Context.dispatch)
+  
   return (
     <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
   )
@@ -565,6 +572,7 @@ const Decrement = () => {
 
 const Increment = () => {
   const dispatch = useContext(Context.dispatch)
+  
   return (
     <button onClick={() => dispatch({ type: 'increment' })}>+</button>
   )
