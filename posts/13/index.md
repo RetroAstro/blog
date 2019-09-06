@@ -76,7 +76,7 @@ module.exports = ({ types: t }) => {
         var _tid = path.scope.generateUidIdentifier('tid')
         var uid = getUid()
 
-        // 以查询取代变量
+        // 引入参数对象
         var query = { t, uid, _tid }
 
         isAsyncFunction(path) ? asyncTransform(path, query) : syncTransform(path, query)
