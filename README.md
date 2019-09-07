@@ -1,4 +1,4 @@
-记录平时自己写的技术文章和学习笔记的地方
+笔记与博文
 -----
 
 [变量，执行环境与作用域，this](./posts/1.md)
@@ -15,9 +15,9 @@
 
 [用 Service Worker 实现前端性能优化](./posts/7.md)  :star:
 
-[笔记 ~ 前端工程基础概览](./posts/8/index.md)
+[前端工程基础概览](./posts/8/index.md)
 
-[Nginx 学习笔记](./posts/9.md)
+[Nginx 学习笔记](./posts/9.md) 
 
 [Vim 基础入门](./posts/10.md)
 
@@ -26,6 +26,4 @@
 [React Hooks 札记](./posts/12/index.md) :star:
 
 [前端中的编译原理 - 从零打造一个实用的 Babel 插件](./posts/13/index.md) :star:
-
-
 
