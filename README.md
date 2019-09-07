@@ -11,7 +11,7 @@
 
 [CSS 动画之旋转魔方轮播](./posts/5.md)  :star:
 
-[20行代码实现模板引擎](./posts/6.md)
+[20 行代码实现模板引擎](./posts/6.md)
 
 [用 Service Worker 实现前端性能优化](./posts/7.md)  :star:
 
