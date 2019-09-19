@@ -6,14 +6,12 @@ interface Action<T> {
 class EffectModule {
   count = 1
   message = 'hello!'
-
   delay(input: Promise<number>) {
     return input.then(i => ({
       payload: `hello ${i}!`,
       type: 'delay'
     }))
   }
-
   setMessage(action: Action<Date>) {
     return {
       payload: action.payload.getMilliseconds(),
@@ -24,9 +22,7 @@ class EffectModule {
 
 type FuncName<T> = { [P in keyof T]: T[P] extends Function ? P : never }[keyof T]
 
-type InitialFunc = (module: EffectModule) => { [T in FuncName<EffectModule>]: EffectModule[T] }
-
-type Middle = InitialFunc extends (module: EffectModule) => infer P ? P: never
+type Middle = { [T in FuncName<EffectModule>]: EffectModule[T] }
 
 type Transfer<T> = {
   [P in keyof T]: T[P] extends (input: Promise<infer J>) => Promise<infer K>
