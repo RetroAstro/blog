@@ -61,7 +61,7 @@ interface Province {
 }
 
 let data: Province = {
-	name: 'Asia',
+  name: 'Asia',
   demand: 30,
   price: 20,
   producers: [
@@ -83,9 +83,9 @@ interface Plays {
 }
 
 let plays: Plays = {
-  "hamlet": { "name": "Hamlet", "type": "tragedy" },
-  "as-like": { "name": "As You Like It", "type": "comedy" },
-  "othello": { "name": "Othello", "type": "tragedy" }
+  'hamlet': { name: 'Hamlet', type: 'tragedy' },
+  'as-like': { name: 'As You Like It', type: 'comedy' },
+  'othello': { name: 'Othello', type: 'tragedy' }
 }
 ```
 
