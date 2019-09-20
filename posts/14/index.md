@@ -220,6 +220,44 @@ type TTuple = [string, number]
 type ToUnion = ElementOf<TTuple> // string | number
 ```
 
+**never 类型**  
+
+```ts
+type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T]
+
+type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T]
+
+interface Part {
+  id: number
+  name: string
+  subparts: Part[]
+  updatePart(newName: string): void
+}
+
+type T40 = FunctionPropertyNames<Part>  // "updatePart"
+type T41 = NonFunctionPropertyNames<Part>  // "id" | "name" | "subparts"
+```
+
+```ts
+type Exclude<T, U> = T extends U ? never : T
+
+// type A = 'a'
+type A = Exclude<'x' | 'a', 'x' | 'y' | 'z'>
+```
+
+```ts
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+
+interface User {
+  id: number
+  age: number
+  name: string
+}
+
+// type PickUser = { age: number; name: string }
+type OmitUser = Omit<User, "id">
+```
+
 装饰器
 
 Reflect Metadata
@@ -227,14 +265,3 @@ Reflect Metadata
 控制反转与依赖注入
 
 协变与逆变
-
-
-
-
-
-
-
-
-
-
-
