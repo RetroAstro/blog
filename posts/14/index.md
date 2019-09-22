@@ -264,4 +264,3 @@ Reflect Metadata
 
 控制反转与依赖注入
 
-协变与逆变
