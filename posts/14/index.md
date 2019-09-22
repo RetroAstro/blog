@@ -340,7 +340,7 @@ type Connected = {
 const connected: Connected = connect(new EffectModule())
 ```
 
-可以看到在调用 connect 函数之后，返回的新对象只包含**EffectModule 的同名方法**，并且方法的类型签名改变了：
+可以看到在调用 connect 函数之后，返回的新对象只包含 EffectModule 的同名方法，并且方法的类型签名改变了：
 
 ```ts
 asyncMethod<T, U>(input: Promise<T>): Promise<Action<U>>  变成了
