@@ -1,7 +1,7 @@
 前言
 -----
 
-很早以前就尝试过使用 TypeScript 来进行日常编码，但自己对静态类型语言的了解并不深入，再加上 TypeScript 的类型系统有着一定的复杂度，因此感觉自己并没有发挥好这门语言的优势，将代码写得更具**可读性**与**可维护性**。于是这几天便想着好好研究下这门语言，希望能够总结出一些特别的语言特性与高级技巧。
+很早以前就尝试过使用 TypeScript 来进行日常编码，但自己对静态类型语言的了解并不深入，再加上 TypeScript 的类型系统有着一定的复杂度，因此感觉自己并没有发挥好这门语言的优势，使代码变得更具**可读性**与**可维护性**。于是这几天便想着好好研究下这门语言，希望能够总结出一些特别的语言特性与实用技巧。
 
 操作符
 -----
@@ -225,7 +225,7 @@ interface User {
 type OmitUser = Omit<User, 'id'>
 ```
 
-巧用 never 
+巧用 never 类型
 
 ```ts
 type FunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T]
@@ -378,7 +378,7 @@ type Connect = (module: EffectModule) => { [T in keyof Transfer<Middle>]: Transf
 控制反转与依赖注入
 -----
 
-**装饰器** 
+装饰器
 
 ```ts
 function classDecorator(): ClassDecorator {
@@ -402,11 +402,11 @@ export class SomeClass {
 }
 ```
 
-**Reflect Metadata** 
-
-Reflect Metadata 的 API 只能用于类或者类的属性、方法上。
+Reflect Metadata
 
 ```ts
+// Reflect Metadata 的 API 只能用于类或者类的属性、方法上。
+
 // 获取属性类型
 Reflect.getMetadata('design:type', target, key)
 
@@ -419,3 +419,4 @@ Reflect.getMetadata('design:returntype', target, key)
 // 用于自定义 metadataKey
 Reflect.defineMetadata('key', 'value', target, key)
 ```
+
