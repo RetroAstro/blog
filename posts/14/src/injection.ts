@@ -68,15 +68,14 @@ abstract class Injector {
 abstract class ReflectiveInjector implements Injector {
   abstract get(token: any): any
   static resolve(providers: Provider[]): ResolvedReflectiveProvider[] {
-    const resolved = providers.map(resolveReflectiveProvider)
-    return resolved
+    return providers.map(resolveReflectiveProvider)
   }
   static fromResolvedProviders(providers: ResolvedReflectiveProvider[]): ReflectiveInjector {
     return new ReflectiveInjector_(providers)
   }
   static resolveAndCreate(providers: Provider[]): ReflectiveInjector {
-    const ResolvedReflectiveProviders = ReflectiveInjector.resolve(providers)
-    return ReflectiveInjector.fromResolvedProviders(ResolvedReflectiveProviders)
+    const resolvedReflectiveProviders = ReflectiveInjector.resolve(providers)
+    return ReflectiveInjector.fromResolvedProviders(resolvedReflectiveProviders)
   }
 }
 
@@ -115,10 +114,10 @@ class ReflectiveInjector_ implements ReflectiveInjector {
     throw noProviderError(res)
   }
   _new(provider: ResolvedReflectiveProvider) {
-    const ResolvedReflectiveFactory = provider.resolvedFactory
-    const factory = ResolvedReflectiveFactory.factory
+    const resolvedReflectiveFactory = provider.resolvedFactory
+    const factory = resolvedReflectiveFactory.factory
 
-    let deps = ResolvedReflectiveFactory.dependencies.map(dep => this._getByKey(dep.key, true))
+    let deps = resolvedReflectiveFactory.dependencies.map(dep => this._getByKey(dep.key, true))
 
     return factory(...deps)
   }
