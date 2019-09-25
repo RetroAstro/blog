@@ -14,7 +14,6 @@ class KeyRegistry {
     }
 
     const newKey = new ReflectiveKey(token, ReflectiveKey.numberOfKeys)
-    
     this._allKeys.set(token, newKey)
     return newKey
   }
@@ -56,7 +55,10 @@ interface ResolvedReflectiveProvider {
 }
 
 class ResolvedReflectiveProvider_ implements ResolvedReflectiveProvider {
-  constructor(public key: ReflectiveKey, public resolvedFactories: ResolvedReflectiveFactory[]) {}
+  constructor(
+    public key: ReflectiveKey,
+    public resolvedFactories: ResolvedReflectiveFactory[]
+  ) {}
   get resolvedFactory(): ResolvedReflectiveFactory {
     return this.resolvedFactories[0]
   }
