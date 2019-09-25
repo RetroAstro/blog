@@ -51,17 +51,14 @@ class ResolvedReflectiveFactory {
 
 interface ResolvedReflectiveProvider {
   key: ReflectiveKey
-  resolvedFactories: ResolvedReflectiveFactory[]
+  resolvedFactory: ResolvedReflectiveFactory
 }
 
 class ResolvedReflectiveProvider_ implements ResolvedReflectiveProvider {
   constructor(
     public key: ReflectiveKey,
-    public resolvedFactories: ResolvedReflectiveFactory[]
+    public resolvedFactory: ResolvedReflectiveFactory
   ) {}
-  get resolvedFactory(): ResolvedReflectiveFactory {
-    return this.resolvedFactories[0]
-  }
 }
 
 abstract class Injector {
@@ -118,7 +115,7 @@ class ReflectiveInjector_ implements ReflectiveInjector {
     throw noProviderError(res)
   }
   _new(provider: ResolvedReflectiveProvider) {
-    const ResolvedReflectiveFactory = provider.resolvedFactories[0]
+    const ResolvedReflectiveFactory = provider.resolvedFactory
     const factory = ResolvedReflectiveFactory.factory
 
     let deps = ResolvedReflectiveFactory.dependencies.map(dep => this._getByKey(dep.key, true))
@@ -130,12 +127,8 @@ class ReflectiveInjector_ implements ReflectiveInjector {
 function resolveReflectiveProvider(provider: Provider): ResolvedReflectiveProvider {
   return new ResolvedReflectiveProvider_(
     ReflectiveKey.get(provider),
-    [resolveReflectiveFactory(provider)]
+    resolveReflectiveFactory(provider)
   )
-}
-
-function factory<T>(t: Type<T>): (args: any[]) => T {
-  return (...args: any[]) => new t(...args)
 }
 
 function resolveReflectiveFactory(provider: Provider): ResolvedReflectiveFactory {
@@ -143,14 +136,18 @@ function resolveReflectiveFactory(provider: Provider): ResolvedReflectiveFactory
   let resolvedDeps: ReflectiveDependency[]
   
   factoryFn = factory(provider)
-  resolvedDeps = _dependenciesFor(provider)
+  resolvedDeps = dependenciesFor(provider)
 
   return new ResolvedReflectiveFactory(factoryFn, resolvedDeps)
 }
 
-function _dependenciesFor(type: Type<any>): ReflectiveDependency[] {
+function factory<T>(t: Type<T>): (args: any[]) => T {
+  return (...args: any[]) => new t(...args)
+}
+
+function dependenciesFor(type: Type<any>): ReflectiveDependency[] {
   const params = parameters(type)
-  return params.map(_extractToken)
+  return params.map(extractToken)
 }
 
 function parameters(type: Type<any>) {
@@ -166,12 +163,10 @@ function parameters(type: Type<any>) {
 
 function noCtor(type: any): boolean {
   return type
-    .toString()
-    .replace(/\s/ig, '')
-    .includes(`function${type.name}()`)
+    .toString().replace(/\s/ig, '').includes(`function${type.name}()`)
 }
 
-function _extractToken(token: any) {
+function extractToken(token: any) {
   return new ReflectiveDependency(ReflectiveKey.get(token))
 }
 
