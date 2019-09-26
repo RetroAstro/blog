@@ -378,7 +378,7 @@ type Connect = (module: EffectModule) => { [T in keyof Transfer<Middle>]: Transf
 控制反转与依赖注入
 -----
 
-控制反转 ( Inversion of Control ) 与依赖注入 ( Dependency Injection ) 是面向对象编程中十分重要的思想和法则。维基百科上给出的解释是 IoC 能够降低计算机代码之间的耦合度，DI 代表的则是在一个对象被创建时，注入该对象所依赖的所有对象的过程。前端框架 Angular 与基于 Node.js 的后端框架 Nest 都引用了这一思想。对于这两个概念的具体阐述在这里就不再展开，但读者可以看看这两篇文章 [**[1]**](https://segmentfault.com/a/1190000008626680#articleHeader2) [**[2]**](https://juejin.im/post/5c16004ae51d45485a098ef8#heading-2) 。下面我们基于 Angular 5 以前的 [Dependency injection](https://github.com/mgechev/injection-js) 来实现简版的控制反转与依赖注入。
+控制反转 ( Inversion of Control ) 与依赖注入 ( Dependency Injection ) 是面向对象编程中十分重要的思想和法则。维基百科上给出的解释是 IoC 能够降低计算机代码之间的耦合度，DI 代表的则是在一个对象被创建时，注入该对象所依赖的所有对象的过程。前端框架 Angular 与基于 Node.js 的后端框架 Nest 都引用了这一思想。对于这两个概念的具体阐述在这里就不再展开，但读者可以看看这两篇文章 [[1]](https://segmentfault.com/a/1190000008626680#articleHeader2) [[2]](https://juejin.im/post/5c16004ae51d45485a098ef8#heading-2) 。下面我们基于 Angular 5 以前的 [Dependency Injection](https://github.com/mgechev/injection-js) 来实现简版的控制反转与依赖注入。
 
 首先让我们来编写一段相关的测试代码：
 
