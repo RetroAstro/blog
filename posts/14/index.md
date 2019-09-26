@@ -378,47 +378,238 @@ type Connect = (module: EffectModule) => { [T in keyof Transfer<Middle>]: Transf
 控制反转与依赖注入
 -----
 
-装饰器
+控制反转 ( Inversion of Control ) 与依赖注入 ( Dependency Injection ) 是面向对象编程中十分重要的思想和法则。维基百科上给出的解释是 IoC 能够降低计算机代码之间的耦合度，DI 代表的则是在一个对象被创建时，注入该对象所依赖的所有对象的过程。前端框架 Angular 与基于 Node.js 的后端框架 Nest 都引用了这一思想。对于这两个概念的具体阐述在这里就不再展开，但读者可以看看这两篇文章 [**[1]**](https://segmentfault.com/a/1190000008626680#articleHeader2) [**[2]**](https://juejin.im/post/5c16004ae51d45485a098ef8#heading-2) 。下面我们基于 Angular 5 以前的 [Dependency injection](https://github.com/mgechev/injection-js) 来实现简版的控制反转与依赖注入。
+
+首先让我们来编写一段相关的测试代码：
 
 ```ts
-function classDecorator(): ClassDecorator {
-  return (target) => {}
+import { expect } from 'chai'
+import { Injectable, createInjector } from './injection'
+
+class Engine {}
+
+class DashboardSoftware {}
+
+@Injectable()
+class Dashboard {
+  constructor(public software: DashboardSoftware) {}
 }
 
-function propsDecorator(): PropertyDecorator {
-  return (target, key) => {}
+@Injectable()
+class Car {
+  constructor(public engine: Engine) {}
 }
 
-function methodDecorator(): MethodDecorator {
-  return (target, key, descriptor) => {}
+@Injectable()
+class CarWithDashboard {
+  constructor(public engine: Engine, public dashboard: Dashboard) {}
 }
 
-@classDecorator()
-export class SomeClass {
-  @propsDecorator()
-  name: string
-  @methodDecorator()
-  someMethod() {}
+class NoAnnotations {
+  constructor(_secretDependency: any) {}
+}
+
+describe('injector', () => {
+  it('should instantiate a class without dependencies', () => {
+    const injector = createInjector([Engine])
+    const engine = injector.get(Engine)
+    expect(engine instanceof Engine).to.be.true
+  })
+
+  it('should resolve dependencies based on type information', () => {
+    const injector = createInjector([Engine, Car])
+    const car = injector.get(Car)
+    expect(car instanceof Car).to.be.true
+    expect(car.engine instanceof Engine).to.be.true
+  })
+
+  it('should resolve nested dependencies based on type information', () => {
+    const injector = createInjector([CarWithDashboard, Engine, Dashboard, DashboardSoftware])
+    const _CarWithDashboard = injector.get(CarWithDashboard)
+    expect(_CarWithDashboard.dashboard.software instanceof DashboardSoftware).to.be.true
+  })
+
+  it('should cache instances', () => {
+    const injector = createInjector([Engine])
+    const e1 = injector.get(Engine)
+    const e2 = injector.get(Engine)
+    expect(e1).to.equal(e2)
+  })
+
+  it('should show the full path when no provider', () => {
+    const injector = createInjector([CarWithDashboard, Engine, Dashboard])
+    expect(() => injector.get(CarWithDashboard)).to.throw('No provider for DashboardSoftware!')
+  })
+
+  it('should throw when no type', () => {
+    expect(() => createInjector([NoAnnotations])).to.throw(
+      'Make sure that NoAnnotations is decorated with Injectable.'
+    )
+  })
+
+  it('should throw when no provider defined', () => {
+    const injector = createInjector([])
+    expect(() => injector.get('NonExisting')).to.throw('No provider for NonExisting!')
+  })
+})
+```
+
+可以看到我们要实现的核心功能有三个：
+
+* 根据提供的类创建 IoC 容器并且能够管理类之间的依赖关系
+* 在通过 IoC 容器获取类的实例对象时注入相关的依赖对象
+* 实现多级依赖与处理边缘情况
+
+首先来实现最简单的 `@Injectable` 装饰器：
+
+```ts
+export const Injectable = (): ClassDecorator => target => {
+  Reflect.defineMetadata('Injectable', true, target)
 }
 ```
 
-Reflect Metadata
+然后我们来实现根据提供的 provider 类创建能够管理类之间依赖关系的 IoC 容器：
 
 ```ts
-// Reflect Metadata 的 API 只能用于类或者类的属性、方法上。
+abstract class ReflectiveInjector implements Injector {
+  abstract get(token: any): any
+  static resolve(providers: Provider[]): ResolvedReflectiveProvider[] {
+    return providers.map(resolveReflectiveProvider)
+  }
+  static fromResolvedProviders(providers: ResolvedReflectiveProvider[]): ReflectiveInjector {
+    return new ReflectiveInjector_(providers)
+  }
+  static resolveAndCreate(providers: Provider[]): ReflectiveInjector {
+    const resolvedReflectiveProviders = ReflectiveInjector.resolve(providers)
+    return ReflectiveInjector.fromResolvedProviders(resolvedReflectiveProviders)
+  }
+}
 
-// 获取属性类型
-Reflect.getMetadata('design:type', target, key)
+class ReflectiveInjector_ implements ReflectiveInjector {
+  _providers: ResolvedReflectiveProvider[]
+  keyIds: number[]
+  objs: any[]
+  constructor(_providers: ResolvedReflectiveProvider[]) {
+    this._providers = _providers
 
-// 获取函数参数类型
-Reflect.getMetadata('design:paramtypes', target, key)
+    const len = _providers.length
 
-// 获取函数返回值类型
-Reflect.getMetadata('design:returntype', target, key)
+    this.keyIds = new Array(len)
+    this.objs = new Array(len)
 
-// 用于自定义 metadataKey
-Reflect.defineMetadata('key', 'value', target, key)
+    for (let i = 0; i < len; i++) {
+      this.keyIds[i] = _providers[i].key.id
+      this.objs[i] = undefined
+    }
+  }
+  // ...
+}
+
+function resolveReflectiveProvider(provider: Provider): ResolvedReflectiveProvider {
+  return new ResolvedReflectiveProvider_(
+    ReflectiveKey.get(provider),
+    resolveReflectiveFactory(provider)
+  )
+}
+
+function resolveReflectiveFactory(provider: Provider): ResolvedReflectiveFactory {
+  let factoryFn: Function
+  let resolvedDeps: ReflectiveDependency[]
+  
+  factoryFn = factory(provider)
+  resolvedDeps = dependenciesFor(provider)
+
+  return new ResolvedReflectiveFactory(factoryFn, resolvedDeps)
+}
+
+function factory<T>(t: Type<T>): (args: any[]) => T {
+  return (...args: any[]) => new t(...args)
+}
+
+function dependenciesFor(type: Type<any>): ReflectiveDependency[] {
+  const params = parameters(type)
+  return params.map(extractToken)
+}
+
+function parameters(type: Type<any>) {
+  if (noCtor(type)) return []
+
+  const isInjectable = Reflect.getMetadata('Injectable', type)
+  const res = Reflect.getMetadata('design:paramtypes', type)
+
+  if (!isInjectable) throw noAnnotationError(type)
+
+  return res ? res : []
+}
+
+export const createInjector = (providers: Provider[]): ReflectiveInjector_ => {
+  return ReflectiveInjector.resolveAndCreate(providers) as ReflectiveInjector_
+}
 ```
 
+从上面的代码不难看出当 IoC 容器创建时会将提供的每个类以及该类所依赖的其他类作为 `ResolvedReflectiveProvider_` 的实例对象存储在容器中，对外返回的则是容器对象 `ReflectiveInjector_` 。
 
+接下来让我们来实现通过 IoC 容器获取类的实例对象的逻辑：
 
+```ts
+class ReflectiveInjector_ implements ReflectiveInjector {
+  // ...
+  get(token: any): any {
+    return this._getByKey(ReflectiveKey.get(token))
+  }
+  private _getByKey(key: ReflectiveKey, isDeps?: boolean) {
+    for (let i = 0; i < this.keyIds.length; i++) {
+      if (this.keyIds[i] === key.id) {
+        if (this.objs[i] === undefined) {
+          this.objs[i] = this._new(this._providers[i])
+        }
+        return this.objs[i]
+      }
+    }
+
+    let res = isDeps ? (key.token as Type).name : key.token
+
+    throw noProviderError(res)
+  }
+  _new(provider: ResolvedReflectiveProvider) {
+    const resolvedReflectiveFactory = provider.resolvedFactory
+    const factory = resolvedReflectiveFactory.factory
+
+    let deps = resolvedReflectiveFactory.dependencies.map(dep => this._getByKey(dep.key, true))
+
+    return factory(...deps)
+  }
+}
+```
+
+可以看到当我们调用 `injector.get()` 方法时 IoC 容器会根据给定类查找对应的 `ReflectiveInjector_` 对象，找到之后便会在实例化给定类之前注入该类依赖的所有类的实例对象，最后再返回给定类的实例化对象。
+
+现在我们再回头看上文的代码，多级依赖的功能其实早已实现。虽然在初始化 loC 容器时我们只能找到某个类的相关依赖，无法再通过依赖类找到更深层级的依赖，但是我们对提供的每个类遍历执行了相同的操作，因此很自然的就实现了多个类之间的依赖。
+
+对于边缘情况我们也做了相应的处理，比如提供的 provider 类为空数组，类并没有被 `@Injectable` 装饰器修饰，提供的类并不完整等。对应上文的代码为：
+
+```ts
+let res = isDeps ? (key.token as Type).name : key.token
+
+throw noProviderError(res)
+```
+
+```ts
+if (!isInjectable) throw noAnnotationError(type)
+```
+
+至此，控制反转与依赖注入的核心功能就实现的差不多了，剩下的就是一些接口定义代码，还有就是 `ReflectiveKey` 类的实现，它的大致作用其实就是基于 ES6 中的 Map 存储 provider 类。感兴趣的读者可以看看完整的[代码示例](https://github.com/RetroAstro/cosmos-blog/tree/master/posts/14)。
+
+------
+
+参考内容：
+
+[深入理解 TypeScript](https://jkchao.github.io/typescript-book-chinese/)
+
+[TypeScript 高级技巧](https://juejin.im/post/5cffb431f265da1b7401f466)
+
+[关于依赖注入](https://juejin.im/post/5c16004ae51d45485a098ef8#heading-2)
+
+[IoC & DI](https://segmentfault.com/a/1190000008626680#articleHeader2)
+
+[Dependency Injection](https://github.com/mgechev/injection-js) 

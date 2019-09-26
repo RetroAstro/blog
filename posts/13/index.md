@@ -420,15 +420,17 @@ path.traverse(returnStatementVisitor, { path, query })
 
 本文到此也就接近尾声了，与文章相关的代码全都在[这个仓库](https://github.com/RetroAstro/babel-plugin)，有兴趣的朋友可以翻阅下。文中如有错误，请读者指出，作者会立即改正。在最后结束时想要感谢 2019 年暑假在腾讯实习时的导师，正是他给作者布置的课题才有了现在这篇文章，当然期间也受到了许多帮助，故在此表达谢意。
 
-**参考内容**
+------
 
-https://juejin.im/post/5a3de2225188252b145b4000
+参考内容：
 
-https://github.com/estree/estree
+[揭秘 DSL](https://juejin.im/post/5a3de2225188252b145b4000)  
 
-https://the-super-tiny-compiler.glitch.me/
+[ESTree 规范](https://github.com/estree/estree)
 
-https://babeljs.io/
+[The Super Tiny Compiler](https://the-super-tiny-compiler.glitch.me/)
 
-https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md
+[Babel 官网](https://babeljs.io/) 
+
+[Babel Plugin Handbook](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md) 
 
