@@ -160,7 +160,7 @@ function parameters(type: Type<any>) {
   return res ? res : []
 }
 
-function noCtor(type: any): boolean {
+function noCtor(type: Type<any>): boolean {
   return type
     .toString().replace(/\s/ig, '').includes(`function${type.name}()`)
 }

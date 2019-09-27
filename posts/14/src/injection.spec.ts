@@ -51,7 +51,7 @@ describe('injector', () => {
     expect(e1).to.equal(e2)
   })
 
-  it('should show the full path when no provider', () => {
+  it('should throw when no all providers', () => {
     const injector = createInjector([CarWithDashboard, Engine, Dashboard])
     expect(() => injector.get(CarWithDashboard)).to.throw('No provider for DashboardSoftware!')
   })
