@@ -926,7 +926,7 @@ fs.watch(dir, (event, filename) => {
 
 ### 结语
 
-对于 JavaScript 异步编程在这里我就讲这么多了，当然还有很多东西自己没有了解和学习到，因此在本篇文章中没有涉及。最后还是给出上面三个场景代码的 [**GitHub 地址**](https://github.com/RetroAstro/cosmos-blog/tree/master/space/11/) ，总之在前端学习的路上还得继续加油嘞 😄。
+对于 JavaScript 异步编程在这里我就讲这么多了，当然还有很多东西自己没有了解和学习到，因此在本篇文章中没有涉及。最后还是给出上面三个场景代码的 [**GitHub 地址**](https://github.com/RetroAstro/cosmos-blog/tree/master/posts/11) ，总之在前端学习的路上还得继续加油嘞 😄。
 
 ---
 
