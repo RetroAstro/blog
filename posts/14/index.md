@@ -127,7 +127,7 @@ type t2 = isBool<false>
 
 ```ts
 interface Dictionary<T> {
-  [index: string]: T
+  [key: string]: T
 }
 
 const data: Dictionary<number> = {
