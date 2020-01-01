@@ -33,7 +33,9 @@
 
 [前端中的编译原理 - 从零打造一个实用的 Babel 插件](./posts/13/index.md) :star::star:
 
-[TypeScript 技巧拾遗](./posts/14/index.md) :star: 
+[TypeScript 技巧拾遗](./posts/14/index.md) :star:
+
+> **2020**
 
 精读《Build your own React》
 
