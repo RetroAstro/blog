@@ -476,61 +476,76 @@ p.then((data) => {
 
 ```js
 let stateRequest = {
-    done: false,
-    transition(message) {
-        this.state = this.stateResult
-        console.log(message)
-        // state 1
-        return foo()
-    }
+  done: false,
+  transition(message) {
+    this.state = this.stateResult
+    console.log(message)
+    // state 1
+    return foo()
+  }
 }
 
 let stateResult = {
-    done: true,
-    transition(data) {
-        // state 2
-        let result = data
-        console.log(result)
-    }
+  done: false,
+  transition(data) {
+    this.state = this.stateEnd
+    // state 2
+    let result = data
+    console.log(result)
+  }
 }
 
 let stateError = {
-    transition(err) {
-        // state 3
-        console.error(err)
-    }
+  done: false,
+  transition(err) {
+    this.state = this.stateEnd
+    // state 3
+    console.error(err)
+  }
+}
+
+let stateEnd = {
+  done: true
 }
 
 let it = {
-    init() {
-        this.stateRequest = Object.create(stateRequest)
-        this.stateResult = Object.create(stateResult)
-        this.stateError = Object.create(stateError)
-        this.state = this.stateRequest
-    },
-    next(data) {
-        if (this.state.done) {
-            return {
-                done: true,
-                value: undefined
-            }
-        } else {
-            return {
-                done: this.state.done,
-                value: this.state.transition.call(this, data)
-            }
-        }
-    },
-    throw(err) {
-        return {
-            done: true,
-            value: this.stateError.transition(err)
-        }
+  init() {
+    this.stateRequest = Object.create(stateRequest)
+    this.stateResult = Object.create(stateResult)
+    this.stateError = Object.create(stateError)
+    this.stateEnd = Object.create(stateEnd)
+    this.state = this.stateRequest
+  },
+  next(data) {
+    if (this.state.done) {
+      return {
+        done: true,
+        value: undefined
+      }
+    } else {
+      return {
+        done: this.state.done,
+        value: this.state.transition.call(this, data)
+      }
     }
+  },
+  throw(err) {
+    return {
+      done: this.state.done,
+      value: this.stateError.transition.call(this, err)
+    }
+  }
 }
 
 it.init()
-it.next('The request begins !')
+
+let p = it.next('The request begins !').value
+
+p.then((data) => {
+  it.next(data)
+}, (err) => {
+  it.throw(err)
+})
 ```
 
 在这里我使用了行为委托模式和状态模式实现了一个简单的有限状态机，而它却展现了生成器中核心部分的工作原理，下面我们来逐步分析它是如何运行的。
