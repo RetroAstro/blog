@@ -37,5 +37,3 @@
 
 > **2020**
 
-精读《Build your own React》
-
